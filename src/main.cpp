@@ -2,32 +2,12 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#include "Context.hpp"
 #include "Shader.hpp"
 
 int main() {
-    GLFWwindow *window;
-
-    if (!glfwInit()) {
-        std::cout << "Failed to initialize GLFW\n";
-        return -1;
-    }
-
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window) {
-        std::cout << "Failed to create GLFW window\n";
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    int version = gladLoadGL(glfwGetProcAddress);
-    if (version == 0) {
-        std::cout << "Failed to initialize OpenGL context\n";
-        return -1;
-    }
-    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
-              << GLAD_VERSION_MINOR(version) << "\n";
-    glViewport(0, 0, 640, 480);
+    GLFWwindow *window = Context::createWindow();
+    Context::initOpenGL();
 
     float vertices[] = {-0.5f, -0.5f, 0.0f, 0.5f, -0.5f,
                         0.0f,  0.0f,  0.5f, 0.0f};

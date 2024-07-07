@@ -7,17 +7,15 @@
 
 Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     // Load shader from file
-    const char *vertexSource = readFile(vertexPath).c_str();
-    const char *fragmentSource = readFile(fragmentPath).c_str();
+    std::string vertexSource = readFile(vertexPath);
+    std::string fragmentSource = readFile(fragmentPath);
 
-    std::cout << vertexPath << std::endl;
-    std::cout << vertexSource << std::endl;
-    std::cout << fragmentPath << std::endl;
-    std::cout << fragmentSource << std::endl;
+    const char *vertexSourceC = vertexSource.c_str();
+    const char *fragmentSourceC = fragmentSource.c_str();
 
     // Load the vertex shader
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexSource, NULL);
+    glShaderSource(vertexShader, 1, &vertexSourceC, NULL);
     glCompileShader(vertexShader);
 
     // Check for shader compile errors
@@ -34,7 +32,7 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath) {
 
     // Load the fragment shader
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+    glShaderSource(fragmentShader, 1, &fragmentSourceC, NULL);
     glCompileShader(fragmentShader);
 
     // Check for shader compile errors
@@ -77,7 +75,9 @@ void Shader::use() {
 }
 
 std::string Shader::readFile(const char *filePath) {
-    std::ifstream fileStream(filePath, std::ios::in);
+    std::ifstream fileStream;
+    fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    fileStream.open(filePath);
     if (!fileStream.is_open()) {
         std::cerr << "Could not read file " << filePath
                   << ". File does not exist." << std::endl;
