@@ -24,8 +24,7 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     } else {
         std::cout << "Vertex shader compiled successfully\n";
     }
@@ -39,8 +38,7 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     } else {
         std::cout << "Fragment shader compiled successfully\n";
     }
@@ -55,8 +53,8 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     glGetProgramiv(this->programID, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog << std::endl;
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        assert(false);
     } else {
         std::cout << "Shader program linked successfully\n";
     }
@@ -74,13 +72,27 @@ void Shader::use() {
     glUseProgram(this->programID);
 }
 
+void Shader::setMat4(const std::string &name, glm::mat4 const &matrix) {
+    glUniformMatrix4fv(this->getUniformLocation(name), 1, GL_FALSE, &matrix[0][0]);
+}
+
+void Shader::setVec3(const std::string &name, glm::vec3 const &vector) {
+    glUniform3fv(this->getUniformLocation(name), 1, &vector[0]);
+}
+
+int Shader::getUniformLocation(const std::string &name) {
+    if (this->uniformLocations.find(name) == this->uniformLocations.end()) {
+        this->uniformLocations[name] = glGetUniformLocation(this->programID, name.c_str());
+    }
+    return this->uniformLocations[name];
+}
+
 std::string Shader::readFile(const char *filePath) {
     std::ifstream fileStream;
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fileStream.open(filePath);
     if (!fileStream.is_open()) {
-        std::cerr << "Could not read file " << filePath
-                  << ". File does not exist." << std::endl;
+        std::cerr << "Could not read file " << filePath << ". File does not exist." << std::endl;
         return "";
     }
 

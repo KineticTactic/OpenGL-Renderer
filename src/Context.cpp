@@ -11,7 +11,7 @@ GLFWwindow *Context::createWindow() {
     }
 
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1000, 600, "Hello World", NULL, NULL);
     if (!window) {
         std::cout << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -21,9 +21,8 @@ GLFWwindow *Context::createWindow() {
     return window;
 }
 
-void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id,
-                            GLenum severity, GLsizei length,
-                            const char *message, const void *userParam) {
+void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity,
+                            GLsizei length, const char *message, const void *userParam) {
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
         return;
@@ -117,9 +116,10 @@ void Context::initOpenGL() {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(glDebugOutput, nullptr);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0,
-                              nullptr, GL_TRUE);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     }
 
-    glViewport(0, 0, 640, 480);
+    glViewport(0, 0, 1000, 600);
+
+    glEnable(GL_DEPTH_TEST);
 }
