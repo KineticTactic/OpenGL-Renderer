@@ -9,7 +9,7 @@ Camera::Camera(glm::vec3 target) {
     this->target = target;
     this->theta = 0.0f;
     this->phi = 0.0f;
-    this->radius = 5.0f;
+    this->radius = 8.0f;
     this->updateViewMatrix();
 }
 

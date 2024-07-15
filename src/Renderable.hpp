@@ -17,7 +17,7 @@ class Renderable {
     glm::vec3 scale;
 
   public:
-    Renderable(std::vector<float> &vertexData);
+    Renderable(std::vector<float> const &vertexData);
     ~Renderable();
 
     void render(Shader &shader);

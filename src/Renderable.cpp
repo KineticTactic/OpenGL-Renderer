@@ -3,7 +3,7 @@
 #include <glad/gl.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-Renderable::Renderable(std::vector<float> &vertexData) {
+Renderable::Renderable(std::vector<float> const &vertexData) {
     glGenVertexArrays(1, &this->vao);
     glBindVertexArray(this->vao);
 

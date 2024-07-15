@@ -11,6 +11,8 @@ GLFWwindow *Context::createWindow() {
     }
 
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
     window = glfwCreateWindow(1000, 600, "Hello World", NULL, NULL);
     if (!window) {
         std::cout << "Failed to create GLFW window\n";
@@ -122,4 +124,5 @@ void Context::initOpenGL() {
     glViewport(0, 0, 1000, 600);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
 }
