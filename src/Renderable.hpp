@@ -3,8 +3,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#include "Shader.hpp"
-
 class Renderable {
   private:
     unsigned int vao;
@@ -20,7 +18,7 @@ class Renderable {
     Renderable(std::vector<float> const &vertexData);
     ~Renderable();
 
-    void render(Shader &shader);
+    void render(class Shader &shader);
 
     inline glm::vec3 getPosition() {
         return this->position;

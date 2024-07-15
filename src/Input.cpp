@@ -1,6 +1,7 @@
 #include "Input.hpp"
 
 #include <iostream>
+#include "Camera.hpp"
 
 void Input::init(GLFWwindow *window, Camera *camera) {
     glfwSetWindowUserPointer(window, camera);

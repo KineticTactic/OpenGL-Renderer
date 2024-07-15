@@ -8,6 +8,10 @@ out vec4 FragColor;
 struct Light {
     vec3 pos;
     vec3 color;
+    float constant;
+    float linear;
+    float quadratic;
+
 };
 
 uniform Light light;
@@ -29,7 +33,11 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * light.color;
 
-    vec3 result = (diffuse + ambient + specular) * objectColor;
+    float distance = length(light.pos - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance +
+        light.quadratic * (distance * distance));
+
+    vec3 result = (diffuse + ambient + specular) * objectColor * attenuation;
 
     FragColor = vec4(result, 1.0);
 }

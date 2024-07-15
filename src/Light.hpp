@@ -2,17 +2,19 @@
 
 #include <glm/glm.hpp>
 
-#include "Shader.hpp"
-
 class Light {
   private:
     glm::vec3 position;
     glm::vec3 color;
 
+    float constant;
+    float linear;
+    float quadratic;
+
   public:
     Light(glm::vec3 position, glm::vec3 color);
 
-    void applyToShader(Shader &shader);
+    void applyToShader(class Shader &shader);
 
     inline glm::vec3 getPosition() {
         return this->position;

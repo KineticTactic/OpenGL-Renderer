@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Shader.hpp"
 
 Renderable::Renderable(std::vector<float> const &vertexData) {
     glGenVertexArrays(1, &this->vao);
