@@ -6,7 +6,7 @@
 #include "Shader.hpp"
 
 class Vertex;
-class Camera;
+class OrbitCamera;
 class Light;
 
 class Terrain {
@@ -23,7 +23,7 @@ class Terrain {
     Terrain();
     ~Terrain();
 
-    void render(Camera &camera, Light &light);
+    void render(OrbitCamera &camera, Light &light);
 
     inline Shader &getShader() {
         return this->shader;

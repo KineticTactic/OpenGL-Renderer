@@ -2,7 +2,7 @@
 CC = g++
 
 # Compiler flags
-CFLAGS = -Wall -g -O0 -static -static-libgcc -static-libstdc++ -fPIC #-Wl,-subsystem,windows
+CFLAGS = -Wall -g -O0 #-static -static-libgcc -static-libstdc++ -fPIC #-Wl,-subsystem,windows
 
 # Directories
 SRC_DIR = src

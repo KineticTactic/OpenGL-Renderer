@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-class Camera {
+class OrbitCamera {
   private:
     glm::vec3 target;
     glm::mat4 viewMatrix;
@@ -13,10 +13,13 @@ class Camera {
     float phi;
     float radius;
 
-  public:
-    Camera(glm::vec3 target);
+    float aspect;
 
-    void move(glm::vec2 offset);
+  public:
+    OrbitCamera(glm::vec3 target);
+
+    void move(glm::vec3 offset);
+    void orbit(glm::vec2 offset);
     void zoom(float offset);
 
     void applyToShader(class Shader &shader);
@@ -24,6 +27,8 @@ class Camera {
     const glm::mat4 &getViewMatrix();
     const glm::mat4 &getProjectionMatrix();
     glm::vec3 getPosition() const;
+
+    void setAspectRatio(float aspectRatio);
 
   private:
     void updateViewMatrix();

@@ -3,17 +3,17 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
-class Camera;
+class OrbitCamera;
 
 class Input {
   private:
-    inline static Camera *camera = nullptr;
+    inline static OrbitCamera *camera = nullptr;
     inline static GLFWwindow *window = nullptr;
     inline static float lastMouseX = 0.0f;
     inline static float lastMouseY = 0.0f;
 
   public:
-    static void init(GLFWwindow *window, Camera *camera);
+    static void init(GLFWwindow *window, OrbitCamera *camera);
     static void processInput();
 
     static void mouseMoveCallback(GLFWwindow *window, double xpos, double ypos);

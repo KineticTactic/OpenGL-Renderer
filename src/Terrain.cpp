@@ -5,28 +5,29 @@
 
 #include "Vertex.hpp"
 #include "Shader.hpp"
-#include "Camera.hpp"
+#include "OrbitCamera.hpp"
 #include "Light.hpp"
 
 Terrain::Terrain()
     : shader("shaders/terrain.vert", "shaders/terrain.frag"), worldPos(-15.0f, -1.0f, -15.0f) {
     float cellSize = 0.05f;
-    int gridSizeX = 600;
-    int gridSizeZ = 600;
+    int gridSizeX = 2000;
+    int gridSizeZ = 2000;
 
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-    noise.SetFrequency(0.2f);
+    noise.SetFrequency(0.01f);
     noise.SetFractalType(FastNoiseLite::FractalType_FBm);
     noise.SetFractalLacunarity(3.5f);
     noise.SetFractalGain(0.2f);
 
     for (int j = 0; j < gridSizeZ; j++) {
         for (int i = 0; i < gridSizeX; i++) {
-            float y1 = noise.GetNoise(i * cellSize, j * cellSize);
-            float y2 = noise.GetNoise(i * cellSize, (j + 1) * cellSize);
-            float y3 = noise.GetNoise((i + 1) * cellSize, j * cellSize);
-            float y4 = noise.GetNoise((i + 1) * cellSize, (j + 1) * cellSize);
+            float height = 10;
+            float y1 = noise.GetNoise(i * cellSize, j * cellSize) * height;
+            float y2 = noise.GetNoise(i * cellSize, (j + 1) * cellSize) * height;
+            float y3 = noise.GetNoise((i + 1) * cellSize, j * cellSize) * height;
+            float y4 = noise.GetNoise((i + 1) * cellSize, (j + 1) * cellSize) * height;
             glm::vec3 v1 = glm::vec3(i * cellSize, y1, j * cellSize);
             glm::vec3 v2 = glm::vec3(i * cellSize, y2, (j + 1) * cellSize);
             glm::vec3 v3 = glm::vec3((i + 1) * cellSize, y3, j * cellSize);
@@ -73,7 +74,7 @@ Terrain::~Terrain() {
     glDeleteBuffers(1, &this->vbo);
 }
 
-void Terrain::render(Camera &camera, Light &light) {
+void Terrain::render(OrbitCamera &camera, Light &light) {
     this->shader.use();
     this->shader.setVec3("worldPos", this->worldPos);
     camera.applyToShader(this->shader);

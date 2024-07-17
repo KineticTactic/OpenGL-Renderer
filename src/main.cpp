@@ -7,7 +7,7 @@
 
 #include "Context.hpp"
 #include "Shader.hpp"
-#include "Camera.hpp"
+#include "OrbitCamera.hpp"
 #include "Input.hpp"
 #include "Light.hpp"
 #include "Renderable.hpp"
@@ -51,16 +51,19 @@ int main() {
     GLFWwindow *window = Context::createWindow();
     Context::initOpenGL();
 
+    OrbitCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    Context::setCamera(window, camera);
+    Input::init(window, &camera);
+
     Shader phongShader("shaders/Phong.vert", "shaders/Phong.frag");
     Shader flatShader("shaders/Flat.vert", "shaders/Flat.frag");
     Shader skyboxShader("shaders/Skybox.vert", "shaders/Skybox.frag");
-    Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
     Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    Input::init(window, &camera);
 
-    camera.move(glm::vec2(0.0f, 50.0f));
+    camera.orbit(glm::vec2(0.0f, 50.0f));
 
-    Renderable cube(Loader::loadOBJ("./assets/monkey.obj"));
+    // Renderable cube(Loader::loadOBJ("./assets/monkey.obj"));
     Renderable lightCube(cubeVertices);
     lightCube.setScale(glm::vec3(0.2f));
     // Renderable plane(planeVertices);
@@ -68,7 +71,7 @@ int main() {
     // plane.setScale(glm::vec3(10.0f));
 
     Skybox::initShader();
-    Skybox skybox("./assets/skybox/");
+    Skybox skybox("./assets/skybox/compressed/");
 
     Terrain terrain;
 
@@ -77,7 +80,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Input::processInput();
-        camera.move(glm::vec2(1.0f, 0.0f));
+        // camera.orbit(glm::vec2(1.0f, 0.0f));
 
         glm::vec3 lightPos = glm::vec3(sin(glfwGetTime() * 2) * 4,
                                        3 * cos(glfwGetTime() * 1) * sin(glfwGetTime() * 1.5) + 3,
@@ -88,8 +91,8 @@ int main() {
         phongShader.use();
         camera.applyToShader(phongShader);
         light.applyToShader(phongShader);
-        phongShader.setVec3("objectColor", glm::vec3(0.87f, 0.43f, 0.98f));
-        cube.render(phongShader);
+        // phongShader.setVec3("objectColor", glm::vec3(0.87f, 0.43f, 0.98f));
+        // cube.render(phongShader);
         // phongShader.setVec3("objectColor", glm::vec3(0.2f, 0.5f, 0.7f));
         // plane.render(phongShader);
 
