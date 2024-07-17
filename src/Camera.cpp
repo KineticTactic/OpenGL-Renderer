@@ -45,8 +45,12 @@ void Camera::applyToShader(Shader &shader) {
     shader.setVec3("viewPos", this->getPosition());
 }
 
-glm::mat4 &Camera::getViewMatrix() {
+const glm::mat4 &Camera::getViewMatrix() {
     return this->viewMatrix;
+}
+
+const glm::mat4 &Camera::getProjectionMatrix() {
+    return this->projectionMatrix;
 }
 
 glm::vec3 Camera::getPosition() const {

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-// #include <tinyobj/tiny_obj_loader.h>
+#include <SOIL2/SOIL2.h>
 
 #include "Context.hpp"
 #include "Shader.hpp"
@@ -13,6 +13,7 @@
 #include "Renderable.hpp"
 #include "Loader.hpp"
 #include "Terrain.hpp"
+#include "Skybox.hpp"
 
 std::vector<float> cubeVertices = {
     -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f,
@@ -52,6 +53,7 @@ int main() {
 
     Shader phongShader("shaders/Phong.vert", "shaders/Phong.frag");
     Shader flatShader("shaders/Flat.vert", "shaders/Flat.frag");
+    Shader skyboxShader("shaders/Skybox.vert", "shaders/Skybox.frag");
     Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
     Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     Input::init(window, &camera);
@@ -64,6 +66,9 @@ int main() {
     // Renderable plane(planeVertices);
     // plane.setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
     // plane.setScale(glm::vec3(10.0f));
+
+    Skybox::initShader();
+    Skybox skybox("./assets/skybox/");
 
     Terrain terrain;
 
@@ -94,6 +99,8 @@ int main() {
         lightCube.render(flatShader);
 
         terrain.render(camera, light);
+
+        skybox.render(camera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

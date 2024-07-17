@@ -21,7 +21,8 @@ class Camera {
 
     void applyToShader(class Shader &shader);
 
-    glm::mat4 &getViewMatrix();
+    const glm::mat4 &getViewMatrix();
+    const glm::mat4 &getProjectionMatrix();
     glm::vec3 getPosition() const;
 
   private:
