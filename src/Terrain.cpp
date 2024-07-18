@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 #include <FastNoise/FastNoiseLite.h>
+#include <iostream>
 
 #include "Vertex.hpp"
 #include "Shader.hpp"
@@ -10,43 +11,52 @@
 
 Terrain::Terrain()
     : shader("shaders/terrain.vert", "shaders/terrain.frag"), worldPos(-15.0f, -1.0f, -15.0f) {
-    float cellSize = 0.05f;
-    int gridSizeX = 2000;
-    int gridSizeZ = 2000;
+    float cellSize = 0.2f;
+    int gridSizeX = 3000;
+    int gridSizeZ = 3000;
 
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
     noise.SetFrequency(0.01f);
     noise.SetFractalType(FastNoiseLite::FractalType_FBm);
     noise.SetFractalLacunarity(3.5f);
-    noise.SetFractalGain(0.2f);
+    noise.SetFractalGain(0.15f);
 
     for (int j = 0; j < gridSizeZ; j++) {
         for (int i = 0; i < gridSizeX; i++) {
-            float height = 10;
-            float y1 = noise.GetNoise(i * cellSize, j * cellSize) * height;
-            float y2 = noise.GetNoise(i * cellSize, (j + 1) * cellSize) * height;
-            float y3 = noise.GetNoise((i + 1) * cellSize, j * cellSize) * height;
-            float y4 = noise.GetNoise((i + 1) * cellSize, (j + 1) * cellSize) * height;
-            glm::vec3 v1 = glm::vec3(i * cellSize, y1, j * cellSize);
-            glm::vec3 v2 = glm::vec3(i * cellSize, y2, (j + 1) * cellSize);
-            glm::vec3 v3 = glm::vec3((i + 1) * cellSize, y3, j * cellSize);
-            glm::vec3 v4 = glm::vec3((i + 1) * cellSize, y4, (j + 1) * cellSize);
+            float height = 30;
+            float y = noise.GetNoise(i * cellSize, j * cellSize) * height;
+            glm::vec3 v = glm::vec3(i * cellSize, y, j * cellSize);
 
-            glm::vec3 normal = glm::cross(v2 - v1, v3 - v1);
+            float dx = 0.1f;
+            glm::vec3 u1 =
+                glm::vec3(i * cellSize + dx,
+                          noise.GetNoise(i * cellSize + dx, j * cellSize) * height, j * cellSize);
+            glm::vec3 u2 =
+                glm::vec3(i * cellSize, noise.GetNoise(i * cellSize, j * cellSize + dx) * height,
+                          j * cellSize + dx);
+            glm::vec3 t1 = u1 - v;
+            glm::vec3 t2 = u2 - v;
+            glm::vec3 n = glm::normalize(glm::cross(t1, t2)) * -1.f;
 
-            glm::vec3 col1 = glm::vec3(0.5f, 0.5f + (y1 + 1) / 4, 0.5f);
-            if (y1 <= -0.5f) {
-                col1 = glm::vec3(0.5f, 0.63f, 0.5f + (-y1 - 0.5f));
+            glm::vec3 col = glm::vec3(0.5f, 0.5f + (y / height + 1) / 4, 0.5f);
+            if (y / height <= -0.5f) {
+                col = glm::vec3(0.5f, 0.63f, 0.5f + (-y / height - 0.5f));
             }
+            this->vertices.push_back({v, n, col});
+        }
+    }
 
-            this->vertices.push_back({v1, normal, col1});
-            this->vertices.push_back({v2, normal, col1});
-            this->vertices.push_back({v3, normal, col1});
+    for (int j = 0; j < gridSizeZ - 1; j++) {
+        for (int i = 0; i < gridSizeX - 1; i++) {
+            int idx = j * gridSizeX + i;
+            indices.push_back(idx);
+            indices.push_back(idx + gridSizeX);
+            indices.push_back(idx + 1);
 
-            this->vertices.push_back({v3, normal, col1});
-            this->vertices.push_back({v2, normal, col1});
-            this->vertices.push_back({v4, normal, col1});
+            indices.push_back(idx + 1);
+            indices.push_back(idx + gridSizeX);
+            indices.push_back(idx + gridSizeX + 1);
         }
     }
 
@@ -67,6 +77,15 @@ Terrain::Terrain()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+
+    glGenBuffers(1, &this->ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(),
+                 GL_STATIC_DRAW);
+
+    this->worldPos = glm::vec3(-gridSizeX * cellSize / 2, 0.0f, -gridSizeZ * cellSize / 2);
+
+    std::cout << "TERRAIN: Num vertices: " << this->vertices.size() << std::endl;
 }
 
 Terrain::~Terrain() {
@@ -81,5 +100,6 @@ void Terrain::render(OrbitCamera &camera, Light &light) {
     light.applyToShader(this->shader);
 
     glBindVertexArray(this->vao);
-    glDrawArrays(GL_TRIANGLES, 0, this->vertices.size());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
+    glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
 }

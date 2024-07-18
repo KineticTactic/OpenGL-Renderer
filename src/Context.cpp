@@ -23,6 +23,7 @@ GLFWwindow *Context::createWindow() {
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwSwapInterval(0);
 
     return window;
 }
@@ -129,6 +130,7 @@ void Context::initOpenGL() {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_CULL_FACE);
 }
 
 void Context::setCamera(GLFWwindow *window, OrbitCamera &camera) {

@@ -88,6 +88,10 @@ void Shader::setVec3(const std::string &name, glm::vec3 const &vector) {
     glUniform3fv(this->getUniformLocation(name), 1, &vector[0]);
 }
 
+void Shader::setVec4(const std::string &name, glm::vec4 const &vector) {
+    glUniform4fv(this->getUniformLocation(name), 1, &vector[0]);
+}
+
 int Shader::getUniformLocation(const std::string &name) {
     if (this->uniformLocations.find(name) == this->uniformLocations.end()) {
         this->uniformLocations[name] = glGetUniformLocation(this->programID, name.c_str());

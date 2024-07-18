@@ -58,8 +58,11 @@ int main() {
 
     Shader phongShader("shaders/Phong.vert", "shaders/Phong.frag");
     Shader flatShader("shaders/Flat.vert", "shaders/Flat.frag");
-    Shader skyboxShader("shaders/Skybox.vert", "shaders/Skybox.frag");
-    Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+
+    Light light(glm::vec3(1.0f, 1.0f, 1.0f));
+    // light.setPosition(glm::vec3(1.2f, 25.0f, 2.0f));
+    light.setDirection(glm::vec3(-0.2f, -1.0f, -0.3f));
+    light.setIntensity(0.4f);
 
     camera.orbit(glm::vec2(0.0f, 50.0f));
 
@@ -75,6 +78,7 @@ int main() {
 
     Terrain terrain;
 
+    double lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         // glClearColor(0.568f, 0.67f, 0.72f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -82,11 +86,11 @@ int main() {
         Input::processInput();
         // camera.orbit(glm::vec2(1.0f, 0.0f));
 
-        glm::vec3 lightPos = glm::vec3(sin(glfwGetTime() * 2) * 4,
-                                       3 * cos(glfwGetTime() * 1) * sin(glfwGetTime() * 1.5) + 3,
-                                       cos(glfwGetTime() * 2) * 4);
-        light.setPosition(lightPos);
-        lightCube.setPosition(lightPos);
+        // glm::vec3 lightPos = glm::vec3(sin(glfwGetTime() * 2) * 4,
+        //                                3 * cos(glfwGetTime() * 1) * sin(glfwGetTime() * 1.5) + 3,
+        //                                cos(glfwGetTime() * 2) * 4);
+        // light.setPosition(lightPos);
+        // lightCube.setPosition(lightPos);
 
         phongShader.use();
         camera.applyToShader(phongShader);
@@ -107,6 +111,11 @@ int main() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        double currentTime = glfwGetTime();
+        double deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+        // std::cout << "Delta: " << deltaTime * 1000 << std::endl;
     }
 
     glfwTerminate();
