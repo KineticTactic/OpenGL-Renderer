@@ -20,7 +20,7 @@ uniform Light light;
 uniform vec3 viewPos;
 
 void main() {
-    float ambientStrength = 0.65;
+    float ambientStrength = 0.45;
     vec3 ambient = ambientStrength * light.color;
 
     vec3 norm = normalize(normal);

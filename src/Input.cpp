@@ -6,16 +6,14 @@
 void Input::init(GLFWwindow *window, OrbitCamera *camera) {
     glfwSetCursorPosCallback(window, Input::mouseMoveCallback);
     glfwSetScrollCallback(window, Input::scrollCallback);
+    glfwSetKeyCallback(window, Input::keyCallback);
     Input::camera = camera;
     Input::window = window;
 }
 
 void Input::processInput() {
-    if (glfwGetKey(Input::window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(Input::window, true);
-    }
 
-    float speed = 0.3f;
+    float speed = 3.f;
     if (glfwGetKey(Input::window, GLFW_KEY_W) == GLFW_PRESS) {
         Input::camera->move(glm::vec3(0.0f, 0.0f, -speed));
     }
@@ -46,4 +44,17 @@ void Input::mouseMoveCallback(GLFWwindow *window, double xpos, double ypos) {
 void Input::scrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
     OrbitCamera *camera = (OrbitCamera *)glfwGetWindowUserPointer(window);
     camera->zoom(-yoffset);
+}
+
+bool isWireframe = false;
+
+void Input::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
+        isWireframe = !isWireframe;
+        glPolygonMode(GL_FRONT_AND_BACK, isWireframe ? GL_LINE : GL_FILL);
+    }
 }

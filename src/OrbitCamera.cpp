@@ -9,8 +9,8 @@
 OrbitCamera::OrbitCamera(glm::vec3 target) {
     this->target = target;
     this->theta = 0.0f;
-    this->phi = 0.0f;
-    this->radius = 15.0f;
+    this->phi = 0.03f;
+    this->radius = 500.0f;
     this->aspect = 1366.0f / 768.0f;
     this->updateViewMatrix();
     this->updateProjectionMatrix();
@@ -39,7 +39,7 @@ void OrbitCamera::orbit(glm::vec2 offset) {
 }
 
 void OrbitCamera::zoom(float offset) {
-    this->radius += offset / 0.1f;
+    this->radius += offset / 0.01f;
 
     if (this->radius < 0.1f) {
         this->radius = 0.1f;
@@ -83,6 +83,6 @@ void OrbitCamera::updateViewMatrix() {
 }
 
 void OrbitCamera::updateProjectionMatrix() {
-    this->projectionMatrix = glm::perspective(glm::radians(45.0f), this->aspect, 0.1f, 1000.0f);
+    this->projectionMatrix = glm::perspective(glm::radians(45.0f), this->aspect, 0.1f, 10000.0f);
     this->viewProjectionMatrix = this->projectionMatrix * this->viewMatrix;
 }

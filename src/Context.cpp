@@ -23,7 +23,7 @@ GLFWwindow *Context::createWindow() {
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-    glfwSwapInterval(0);
+    // glfwSwapInterval(0);
 
     return window;
 }

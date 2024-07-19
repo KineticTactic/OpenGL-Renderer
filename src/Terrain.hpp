@@ -8,23 +8,19 @@
 class Vertex;
 class OrbitCamera;
 class Light;
+class Chunk;
 
 class Terrain {
   private:
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-
-    unsigned int vao;
-    unsigned int vbo;
-    unsigned int ebo;
-
     Shader shader;
-    glm::vec3 worldPos;
+
+    std::vector<Chunk *> chunks;
 
   public:
     Terrain();
     ~Terrain();
 
+    void update(OrbitCamera &camera);
     void render(OrbitCamera &camera, Light &light);
 
     inline Shader &getShader() {
