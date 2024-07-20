@@ -14,6 +14,7 @@
 #include "Loader.hpp"
 #include "Terrain.hpp"
 #include "Skybox.hpp"
+#include "Debug.hpp"
 
 std::vector<float> cubeVertices = {
     -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f,
@@ -50,6 +51,7 @@ std::vector<float> planeVertices = {-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
 int main() {
     GLFWwindow *window = Context::createWindow();
     Context::initOpenGL();
+    Debug::init();
 
     OrbitCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -61,7 +63,7 @@ int main() {
 
     Light light(glm::vec3(1.0f, 1.0f, 1.0f));
     // light.setPosition(glm::vec3(1.2f, 25.0f, 2.0f));
-    light.setDirection(glm::vec3(-0.5f, -1.0f, -0.5f));
+    light.setDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
     light.setIntensity(0.7f);
 
     camera.orbit(glm::vec2(0.0f, 50.0f));
@@ -80,11 +82,33 @@ int main() {
 
     Terrain terrain;
 
+    GLuint depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     double lastTime = glfwGetTime();
     double dt = 0.0;
     while (!glfwWindowShouldClose(window)) {
         // glClearColor(0.568f, 0.67f, 0.72f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Input::processInput(dt);
         terrain.update(camera);
@@ -95,8 +119,31 @@ int main() {
         //                                + 3, cos(glfwGetTime() * 2) * 4);
         // light.setPosition(lightPos);
         // lightCube.setPosition(lightPos);
-        glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() * 2));
+        // glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() * 2));
         // light.setDirection(lightDir);
+
+        // DEPTH PASS
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        // glCullFace(GL_FRONT);
+
+        float near_plane = 0.1f, far_plane = 7500.f;
+        glm::mat4 lightProjection =
+            glm::ortho(-2000.f, 2000.f, -2000.f, 2000.f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(
+            glm::vec3(1.0f, 1.0f, 1.0f) * 2000.f + camera.getPosition(),
+            glm::vec3(0.0f, 0.0f, 0.0f) + camera.getPosition(), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+        terrain.renderDepthPass(lightSpaceMatrix);
+
+        // RenderScene();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // RENDER PASS
+        // glCullFace(GL_BACK); // don't forget to reset original culling face
+        glViewport(0, 0, Context::getFramebufferSize().x, Context::getFramebufferSize().y);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         phongShader.use();
         camera.applyToShader(phongShader);
@@ -111,7 +158,7 @@ int main() {
         // camera.applyToShader(flatShader);
         // lightCube.render(flatShader);
 
-        terrain.render(camera, light);
+        terrain.render(camera, light, depthMap, lightSpaceMatrix);
 
         // GL_MAX_TESS_GEN_LEVEL
         // int maxTess;
@@ -120,13 +167,15 @@ int main() {
 
         skybox.render(camera);
 
+        // Debug::drawTexture(depthMap);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
 
         double currentTime = glfwGetTime();
         dt = currentTime - lastTime;
         lastTime = currentTime;
-        // std::cout << "Delta: " << deltaTime * 1000 << std::endl;
+        std::cout << "Delta: " << dt * 1000 << std::endl;
     }
 
     glfwTerminate();

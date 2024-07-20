@@ -3,6 +3,7 @@
 in vec3 normal;
 in vec3 fragPos;
 in vec3 color;
+in vec4 fragPosLightSpace;
 
 out vec4 FragColor;
 
@@ -18,9 +19,37 @@ struct Light {
 
 uniform Light light;
 uniform vec3 viewPos;
+uniform sampler2D shadowMap;
+
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
+    // perform perspective divide to convert into NDC
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // check whether current frag pos is in shadow
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
+}
 
 void main() {
-    float ambientStrength = 0.45;
+    float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * light.color;
 
     vec3 norm = normalize(normal);
@@ -44,7 +73,11 @@ void main() {
             light.quadratic * (distance * distance)); // Point light
     }
 
-    vec3 result = (diffuse + ambient + specular) * color * attenuation * light.intensity;
+    // vec3 result = (diffuse + ambient + specular) * color * attenuation * light.intensity;
+
+        // calculate shadow
+    float shadow = ShadowCalculation(fragPosLightSpace, norm, lightDir);
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * color * attenuation * light.intensity;    
 
     // Fog
 //     float fog_maxdist = 5000;
@@ -59,5 +92,6 @@ void main() {
     // result = mix(fog_colour, result, fog_factor);
 
     FragColor = vec4(result, 1.0);
+    // FragColor = vec4(vec3(shadow), 1.0);
     // FragColor = vec4(norm, 1.0);
 }

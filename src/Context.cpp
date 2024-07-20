@@ -140,6 +140,12 @@ void Context::setCamera(GLFWwindow *window, OrbitCamera &camera) {
     glfwSetWindowUserPointer(window, &camera);
 }
 
+glm::vec2 Context::getFramebufferSize() {
+    int width, height;
+    glfwGetFramebufferSize(glfwGetCurrentContext(), &width, &height);
+    return glm::vec2(width, height);
+}
+
 void Context::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
     std::cout << "Resized to " << width << "x" << height << std::endl;

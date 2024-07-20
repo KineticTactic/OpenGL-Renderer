@@ -5,6 +5,7 @@ layout(quads, equal_spacing, ccw) in;
 uniform sampler2D heightMap;
 uniform vec3 worldPos;
 uniform mat4 viewProjection;
+uniform mat4 lightSpaceMatrix;
 uniform float chunkSize;
 uniform int heightMapRes;
 
@@ -13,15 +14,16 @@ in vec2 TextureCoord[];
 out vec3 normal;
 out vec3 fragPos;
 out vec3 color;
+out vec4 fragPosLightSpace;
 
 vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
 	vec3 color;
 
     // Normalize height to the range [0, 1]
-	float normalizedHeight = height / 180.0;
+	float normalizedHeight = height / 360.0;
 
     // Calculate steepness (1.0 for flat areas, 0.0 for steep areas)
-	float steepness = normal.y;
+	float steepness = pow(normal.y, 3);
 
     // Base color calculation based on height
 	if(normalizedHeight < 0.25) {
@@ -39,12 +41,12 @@ vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
 	}
 
     // Additional blending based on steepness
-	vec3 grassColor = vec3(0.0, 0.5, 0.0);
-	vec3 rockyColor = vec3(0.56, 0.56, 0.6);
+	vec3 grassColor = vec3(0.27, 0.45, 0.11);
+	vec3 rockyColor = vec3(0.37, 0.22, 0.16);
 
-	return color;
+	// return color;
     // Blend between grass and rocky color based on steepness
-	color = mix(color, mix(rockyColor, grassColor, steepness), 0.3);
+	color = mix(color, mix(rockyColor, grassColor, steepness), 0.5);
 
 	return color;
 }
@@ -82,6 +84,7 @@ void main() {
 	gl_Position = viewProjection * (p + vec4(worldPos, 0.0));
 
 	fragPos = p.xyz + worldPos;
+	fragPosLightSpace = lightSpaceMatrix * vec4(fragPos, 1.0);
 
 	// color = vec3(0.3 - (height / (115)) / 8, 0.5 - (height / (115)) / 2, 0.2 + (height / (115)) / 2);
 	// brown color to white color gradient

@@ -60,12 +60,11 @@ float heightFunc(vec2 v) {
 	float highFreq = octaveNoise(v, 10, 0.01, 0.5);
 	highFreq = pow(highFreq, 1.4) * 0.05;
 
-	float lowFreq = octaveNoise(v, 4, 0.001, 0.35);
-	lowFreq = pow(lowFreq, 2);
+	float lowFreq = octaveNoise(v, 4, 0.0005, 0.35);
+	lowFreq = pow(lowFreq, 2) * 2;
 
 	float highhighFreq = octaveNoise(v, 6, 2, 0.5) * 0.005;
 
-	// y += octaveNoise(v, 2, 0.002, 0.25) * 10;
 	float y = lowFreq + highFreq + highhighFreq;
 	return y * 256;
 }

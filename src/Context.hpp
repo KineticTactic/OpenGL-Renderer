@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 class OrbitCamera;
 
@@ -10,6 +11,7 @@ class Context {
     static GLFWwindow *createWindow();
     static void initOpenGL();
     static void setCamera(GLFWwindow *window, OrbitCamera &camera);
+    static glm::vec2 getFramebufferSize();
 
   private:
     static void framebufferSizeCallback(GLFWwindow *window, int width, int height);

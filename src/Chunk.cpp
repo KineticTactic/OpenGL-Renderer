@@ -111,7 +111,7 @@ void Chunk::generate(Shader &compute) {
     std::cout << "[CHUNK]: Chunk generated: " << time * 1000 << "ms" << std::endl;
 }
 
-void Chunk::render(class Shader &shader) {
+void Chunk::render(Shader &shader) {
     if (!this->generated)
         return;
 

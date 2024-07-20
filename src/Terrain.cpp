@@ -41,7 +41,9 @@ std::vector<IntCoords> Spiral(int X, int Y) {
 Terrain::Terrain()
     : shader("shaders/terrain.vert", "shaders/terrain.tesc", "shaders/terrain.tese",
              "shaders/terrain.frag"),
-      compute("shaders/TerrainGen.comp") {
+      compute("shaders/TerrainGen.comp"),
+      depthShader("shaders/terrain.vert", "shaders/TerrainDepth.tesc", "shaders/TerrainDepth.tese",
+                  "shaders/TerrainDepth.frag") {
     std::vector<IntCoords> coords = Spiral(20, 20);
     for (auto &coord : coords) {
         this->chunks.push_back(new Chunk(coord.x, coord.y));
@@ -78,13 +80,28 @@ void Terrain::update(OrbitCamera &camera) {
     }
 }
 
-void Terrain::render(OrbitCamera &camera, Light &light) {
+void Terrain::render(OrbitCamera &camera, Light &light, unsigned int depthMap,
+                     glm::mat4 &lightSpaceMatrix) {
     this->shader.use();
     camera.applyToShader(this->shader);
     light.applyToShader(this->shader);
     shader.setMat4("view", camera.getViewMatrix());
+    shader.setInt("shadowMap", 1);
+    shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
 
     for (auto &chunk : this->chunks) {
         chunk->render(this->shader);
+    }
+}
+
+void Terrain::renderDepthPass(glm::mat4 &lightSpaceMatrix) {
+    this->depthShader.use();
+    this->depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    for (auto &chunk : this->chunks) {
+        chunk->render(this->depthShader);
     }
 }
