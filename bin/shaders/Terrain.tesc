@@ -20,9 +20,9 @@ void main() {
     // ----------------------------------------------------------------------
     // Step 1: define constants to control tessellation parameters
 	// set these as desired for your world scale
-		const int MIN_TESS_LEVEL = 4;
-		const int MAX_TESS_LEVEL = 256;
-		const float MIN_DISTANCE = 20;
+		const int MIN_TESS_LEVEL = 1;
+		const int MAX_TESS_LEVEL = 64;
+		const float MIN_DISTANCE = 30;
 		const float MAX_DISTANCE = 2000;
 
     // ----------------------------------------------------------------------

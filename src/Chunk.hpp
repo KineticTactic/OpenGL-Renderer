@@ -7,6 +7,7 @@
 class Vertex;
 class OrbitCamera;
 class Light;
+class Shader;
 
 class Chunk {
   private:
@@ -17,22 +18,21 @@ class Chunk {
     glm::vec3 worldPos;
 
     bool generated = false;
-    std::vector<bool> generatedLODs;
-
-    static float chunkSize;
-    static float cellSize;
-    inline static int heightMapRes = 256;
 
     inline static GLuint vao = 0;
     inline static GLuint vbo = 0;
 
   public:
+    inline static float chunkSize = 254.f;
+    inline static int subdivisions = 8;
+    inline static int heightMapRes = 256;
+
     Chunk(int chunkX, int chunkZ);
     ~Chunk();
 
-    void generate();
+    void generate(Shader &compute);
 
-    void render(class Shader &shader);
+    void render(Shader &shader);
 
     inline bool isGenerated() {
         return this->generated;

@@ -13,6 +13,7 @@ class Chunk;
 class Terrain {
   private:
     Shader shader;
+    Shader compute;
 
     std::vector<Chunk *> chunks;
 

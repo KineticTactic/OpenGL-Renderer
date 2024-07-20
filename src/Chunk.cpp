@@ -8,10 +8,6 @@
 #include "Vertex.hpp"
 #include "Shader.hpp"
 
-float Chunk::chunkSize = 254.0f;
-float Chunk::cellSize = 10.0f;
-std::vector<float> LODs = {1.0f, 5.0f, 10.0f, 20.0f, 100.0f, 200.0f};
-
 Chunk::Chunk(int chunkX, int chunkZ)
     : worldPos({chunkX * Chunk::chunkSize, 0.0f, chunkZ * Chunk::chunkSize}) {
 
@@ -19,12 +15,47 @@ Chunk::Chunk(int chunkX, int chunkZ)
     glBindTexture(GL_TEXTURE_2D, this->textureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, heightMapRes, heightMapRes, 0, GL_RED, GL_FLOAT,
+                 nullptr);
 }
 
 Chunk::~Chunk() {
     glDeleteTextures(1, &this->textureID);
+}
+
+// Vertex layout: vec3 pos, vec2 tex
+// Credits: Cgpt
+std::vector<float> generateSplitQuads(float chunkSize, int numSubdivisions, float pix) {
+    std::vector<float> vertexData;
+
+    float step = chunkSize / numSubdivisions;           // Size of each smaller quad
+    float texStep = (1.0f - 2 * pix) / numSubdivisions; // Texture coordinate step size
+
+    for (int i = 0; i < numSubdivisions; ++i) {
+        for (int j = 0; j < numSubdivisions; ++j) {
+            float x0 = i * step;
+            float x1 = (i + 1) * step;
+            float z0 = j * step;
+            float z1 = (j + 1) * step;
+
+            float s0 = pix + i * texStep;
+            float s1 = pix + (i + 1) * texStep;
+            float t0 = pix + j * texStep;
+            float t1 = pix + (j + 1) * texStep;
+
+            // Add vertices for the current quad
+            vertexData.insert(vertexData.end(), {
+                                                    x0, 0, z0, s0, t0, // Bottom-left
+                                                    x0, 0, z1, s0, t1, // Top-left
+                                                    x1, 0, z0, s1, t0, // Bottom-right
+                                                    x1, 0, z1, s1, t1  // Top-right
+                                                });
+        }
+    }
+
+    return vertexData;
 }
 
 void Chunk::generateBuffers() {
@@ -32,13 +63,9 @@ void Chunk::generateBuffers() {
     glBindVertexArray(Chunk::vao);
 
     // Vertex layout: vec3 pos, vec2 tex
-    float pix = 1.0f / 256;
-    std::vector<float> vertexData = {
-        0,         0, 0,         pix,     pix,     //
-        0,         0, chunkSize, pix,     1 - pix, //
-        chunkSize, 0, 0,         1 - pix, pix,     //
-        chunkSize, 0, chunkSize, 1 - pix, 1 - pix  //
-    };
+    float pix = 1.0f / heightMapRes;
+
+    std::vector<float> vertexData = generateSplitQuads(Chunk::chunkSize, Chunk::subdivisions, pix);
 
     glGenBuffers(1, &Chunk::vbo);
     glBindBuffer(GL_ARRAY_BUFFER, Chunk::vbo);
@@ -58,40 +85,25 @@ void Chunk::deleteBuffers() {
     glDeleteBuffers(1, &Chunk::vbo);
 }
 
-void Chunk::generate() {
+void Chunk::generate(Shader &compute) {
     double start = glfwGetTime();
 
-    FastNoiseLite noise;
-    noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-    noise.SetFrequency(0.01f);
-    noise.SetFractalType(FastNoiseLite::FractalType_FBm);
-    noise.SetFractalLacunarity(3.0f);
-    noise.SetFractalGain(0.15f);
+    glBindImageTexture(0, this->textureID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-    FastNoiseLite noise2;
-    noise2.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-    noise2.SetFrequency(0.0015f);
-    noise2.SetFractalType(FastNoiseLite::FractalType_FBm);
-    noise2.SetFractalLacunarity(1.0f);
+    compute.use();
+    compute.setVec3("worldPos", this->worldPos);
+    compute.setInt("heightMapRes", heightMapRes);
+    glDispatchCompute(heightMapRes, heightMapRes, 1);
+    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    float cellSize = Chunk::chunkSize / (heightMapRes - 2);
+    // std::vector<float> data(heightMapRes * heightMapRes);
+    // glBindTexture(GL_TEXTURE_2D, this->textureID); // Make sure to bind the texture before
+    // reading glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data.data());
 
-    for (int j = 0; j < heightMapRes; j++) {
-        for (int i = 0; i < heightMapRes; i++) {
-            float height = 15;
-            float height2 = 100;
-            float y =
-                noise.GetNoise((i - 1) * cellSize + worldPos.x, (j - 1) * cellSize + worldPos.z) *
-                    height +
-                noise2.GetNoise(i * cellSize + worldPos.x, j * cellSize + worldPos.z) * height2;
-            this->heightMap.push_back(y);
-        }
-    }
-
-    glBindTexture(GL_TEXTURE_2D, this->textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, heightMapRes, heightMapRes, 0, GL_RED, GL_FLOAT,
-                 this->heightMap.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+    // Debug: print out some values to check if the texture was updated
+    // for (int i = 0; i < 10; ++i) {
+    //     std::cout << data[i] << std::endl;
+    // }
 
     this->generated = true;
 
@@ -100,8 +112,8 @@ void Chunk::generate() {
 }
 
 void Chunk::render(class Shader &shader) {
-    // if (!this->generated)
-    //     return;
+    if (!this->generated)
+        return;
 
     shader.setVec3("worldPos", this->worldPos);
     shader.setInt("heightMap", 0);
@@ -110,5 +122,5 @@ void Chunk::render(class Shader &shader) {
     glBindTexture(GL_TEXTURE_2D, this->textureID);
 
     glBindVertexArray(Chunk::vao);
-    glDrawArrays(GL_PATCHES, 0, 4);
+    glDrawArrays(GL_PATCHES, 0, subdivisions * subdivisions * 4);
 }

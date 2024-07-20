@@ -101,31 +101,15 @@ Shader::Shader(const char *vertexPath, const char *tessControlPath, const char *
 }
 
 Shader::Shader(const char *computePath) {
-    // Load shader from file
-    std::string computeSource = readFile(computePath);
-
-    const char *computeSourceC = computeSource.c_str();
-
-    // Load the compute shader
-    unsigned int computeShader = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(computeShader, 1, &computeSourceC, NULL);
-    glCompileShader(computeShader);
-
-    // Check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(computeShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" << infoLog << std::endl;
-    } else {
-        std::cout << "[SHADER]: Compute shader compiled successfully (" << computePath << ")\n";
-    }
+    unsigned int computeShader = compileShader(computePath, GL_COMPUTE_SHADER);
 
     // Link the shaders
     this->programID = glCreateProgram();
     glAttachShader(this->programID, computeShader);
     glLinkProgram(this->programID);
+
+    int success;
+    char infoLog[512];
 
     // Check for linking errors
     glGetProgramiv(this->programID, GL_LINK_STATUS, &success);

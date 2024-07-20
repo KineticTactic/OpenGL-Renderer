@@ -40,12 +40,12 @@ std::vector<float> cubeVertices = {
     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
     -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f};
 
-std::vector<float> planeVertices = {-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, //
-                                    0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f, //
-                                    0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f, //
-                                    -0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, //
-                                    0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f, //
-                                    -0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f};
+std::vector<float> planeVertices = {-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
+                                    -0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,  //
+                                    0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
+                                    0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
+                                    -0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,  //
+                                    0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f}; //
 
 int main() {
     GLFWwindow *window = Context::createWindow();
@@ -61,8 +61,8 @@ int main() {
 
     Light light(glm::vec3(1.0f, 1.0f, 1.0f));
     // light.setPosition(glm::vec3(1.2f, 25.0f, 2.0f));
-    light.setDirection(glm::vec3(-1.f, -1.0f, -1.f));
-    light.setIntensity(0.4f);
+    light.setDirection(glm::vec3(-0.5f, -1.0f, -0.5f));
+    light.setIntensity(0.7f);
 
     camera.orbit(glm::vec2(0.0f, 50.0f));
 
@@ -71,9 +71,9 @@ int main() {
     cube.setPosition(glm::vec3(0.0f, 100.0f, 0.0f));
     Renderable lightCube(cubeVertices);
     lightCube.setScale(glm::vec3(0.2f));
-    // Renderable plane(planeVertices);
-    // plane.setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-    // plane.setScale(glm::vec3(10.0f));
+    Renderable plane(planeVertices);
+    plane.setPosition(glm::vec3(0.0f, 30.0f, 0.0f));
+    plane.setScale(glm::vec3(3000.0f));
 
     Skybox::initShader();
     Skybox skybox("./assets/skybox/compressed/");
@@ -91,8 +91,8 @@ int main() {
         // camera.orbit(glm::vec2(1.0f, 0.0f));
 
         // glm::vec3 lightPos = glm::vec3(sin(glfwGetTime() * 2) * 4,
-        //                                3 * cos(glfwGetTime() * 1) * sin(glfwGetTime() * 1.5) + 3,
-        //                                cos(glfwGetTime() * 2) * 4);
+        //                                3 * cos(glfwGetTime() * 1) * sin(glfwGetTime() * 1.5)
+        //                                + 3, cos(glfwGetTime() * 2) * 4);
         // light.setPosition(lightPos);
         // lightCube.setPosition(lightPos);
         glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() * 2));
@@ -103,8 +103,8 @@ int main() {
         light.applyToShader(phongShader);
         phongShader.setVec3("objectColor", glm::vec3(0.87f, 0.43f, 0.98f));
         cube.render(phongShader);
-        // phongShader.setVec3("objectColor", glm::vec3(0.2f, 0.5f, 0.7f));
-        // plane.render(phongShader);
+        phongShader.setVec3("objectColor", glm::vec3(0.2f, 0.3f, 0.9f));
+        plane.render(phongShader);
 
         // flatShader.use();
         // flatShader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -112,6 +112,11 @@ int main() {
         // lightCube.render(flatShader);
 
         terrain.render(camera, light);
+
+        // GL_MAX_TESS_GEN_LEVEL
+        // int maxTess;
+        // glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTess);
+        // std::cout << "Tessellation level: " << maxTess << std::endl;
 
         skybox.render(camera);
 

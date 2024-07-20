@@ -28,10 +28,11 @@ void main() {
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * light.color;
 
-    float specularStrength = 0.3;
-    vec3 viewDir = normalize(viewPos - fragPos);
+    float specularStrength = 0.1;
+    vec3 viewDist = viewPos - fragPos;
+    vec3 viewDir = normalize(viewDist);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 8);
     vec3 specular = specularStrength * spec * light.color;
 
     float attenuation;
@@ -44,6 +45,18 @@ void main() {
     }
 
     vec3 result = (diffuse + ambient + specular) * color * attenuation * light.intensity;
+
+    // Fog
+//     float fog_maxdist = 5000;
+//     float fog_mindist = 1000;
+//     vec3 fog_colour = vec3(0.8);
+
+// // Calculate fog
+//     float dist = length(viewDist);
+//     float fog_factor = (fog_maxdist - dist) /
+//         (fog_maxdist - fog_mindist);
+//     fog_factor = clamp(fog_factor, 0.0, 1.0);
+    // result = mix(fog_colour, result, fog_factor);
 
     FragColor = vec4(result, 1.0);
     // FragColor = vec4(norm, 1.0);

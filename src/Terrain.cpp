@@ -40,7 +40,8 @@ std::vector<IntCoords> Spiral(int X, int Y) {
 
 Terrain::Terrain()
     : shader("shaders/terrain.vert", "shaders/terrain.tesc", "shaders/terrain.tese",
-             "shaders/terrain.frag") {
+             "shaders/terrain.frag"),
+      compute("shaders/TerrainGen.comp") {
     std::vector<IntCoords> coords = Spiral(20, 20);
     for (auto &coord : coords) {
         this->chunks.push_back(new Chunk(coord.x, coord.y));
@@ -48,6 +49,9 @@ Terrain::Terrain()
 
     // TODO: Put into static method
     Chunk::generateBuffers();
+    this->shader.use();
+    this->shader.setInt("heightMapRes", Chunk::heightMapRes - 2);
+    this->shader.setFloat("chunkSize", Chunk::chunkSize);
 }
 
 Terrain::~Terrain() {
@@ -61,9 +65,14 @@ Terrain::~Terrain() {
 void Terrain::update(OrbitCamera &camera) {
 
     // bool isCameraOnChunk = false;
+    int numPerFrame = 10;
+    int generated = 0;
     for (auto &chunk : this->chunks) {
         if (!chunk->isGenerated()) {
-            chunk->generate();
+            chunk->generate(this->compute);
+            generated++;
+        }
+        if (generated >= numPerFrame) {
             break;
         }
     }
