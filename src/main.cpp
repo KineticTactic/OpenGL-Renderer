@@ -61,7 +61,7 @@ int main() {
 
     Light light(glm::vec3(1.0f, 1.0f, 1.0f));
     // light.setPosition(glm::vec3(1.2f, 25.0f, 2.0f));
-    light.setDirection(glm::vec3(-0.2f, -1.0f, -0.3f));
+    light.setDirection(glm::vec3(-1.f, -1.0f, -1.f));
     light.setIntensity(0.4f);
 
     camera.orbit(glm::vec2(0.0f, 50.0f));
@@ -81,11 +81,12 @@ int main() {
     Terrain terrain;
 
     double lastTime = glfwGetTime();
+    double dt = 0.0;
     while (!glfwWindowShouldClose(window)) {
         // glClearColor(0.568f, 0.67f, 0.72f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Input::processInput();
+        Input::processInput(dt);
         terrain.update(camera);
         // camera.orbit(glm::vec2(1.0f, 0.0f));
 
@@ -94,6 +95,8 @@ int main() {
         //                                cos(glfwGetTime() * 2) * 4);
         // light.setPosition(lightPos);
         // lightCube.setPosition(lightPos);
+        glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() * 2));
+        // light.setDirection(lightDir);
 
         phongShader.use();
         camera.applyToShader(phongShader);
@@ -103,10 +106,10 @@ int main() {
         // phongShader.setVec3("objectColor", glm::vec3(0.2f, 0.5f, 0.7f));
         // plane.render(phongShader);
 
-        flatShader.use();
-        flatShader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        camera.applyToShader(flatShader);
-        lightCube.render(flatShader);
+        // flatShader.use();
+        // flatShader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        // camera.applyToShader(flatShader);
+        // lightCube.render(flatShader);
 
         terrain.render(camera, light);
 
@@ -116,9 +119,9 @@ int main() {
         glfwPollEvents();
 
         double currentTime = glfwGetTime();
-        double deltaTime = currentTime - lastTime;
+        dt = currentTime - lastTime;
         lastTime = currentTime;
-        std::cout << "Delta: " << deltaTime * 1000 << std::endl;
+        // std::cout << "Delta: " << deltaTime * 1000 << std::endl;
     }
 
     glfwTerminate();

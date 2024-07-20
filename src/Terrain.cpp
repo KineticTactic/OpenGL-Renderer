@@ -38,18 +38,24 @@ std::vector<IntCoords> Spiral(int X, int Y) {
     return coords;
 }
 
-Terrain::Terrain() : shader("shaders/terrain.vert", "shaders/terrain.frag") {
-    std::vector<IntCoords> coords = Spiral(10, 10);
+Terrain::Terrain()
+    : shader("shaders/terrain.vert", "shaders/terrain.tesc", "shaders/terrain.tese",
+             "shaders/terrain.frag") {
+    std::vector<IntCoords> coords = Spiral(20, 20);
     for (auto &coord : coords) {
         this->chunks.push_back(new Chunk(coord.x, coord.y));
     }
-    // this->chunks.push_back(new Chunk({0.0f, 0.0f, 0.0f}));
+
+    // TODO: Put into static method
+    Chunk::generateBuffers();
 }
 
 Terrain::~Terrain() {
     for (auto &chunk : this->chunks) {
         delete chunk;
     }
+    // TODO: Put into static method
+    Chunk::deleteBuffers();
 }
 
 void Terrain::update(OrbitCamera &camera) {
@@ -67,6 +73,7 @@ void Terrain::render(OrbitCamera &camera, Light &light) {
     this->shader.use();
     camera.applyToShader(this->shader);
     light.applyToShader(this->shader);
+    shader.setMat4("view", camera.getViewMatrix());
 
     for (auto &chunk : this->chunks) {
         chunk->render(this->shader);

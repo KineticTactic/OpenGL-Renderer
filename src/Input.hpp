@@ -14,7 +14,7 @@ class Input {
 
   public:
     static void init(GLFWwindow *window, OrbitCamera *camera);
-    static void processInput();
+    static void processInput(double dt);
 
     static void mouseMoveCallback(GLFWwindow *window, double xpos, double ypos);
     static void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);

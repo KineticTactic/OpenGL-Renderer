@@ -7,6 +7,9 @@
 class Shader {
   public:
     Shader(const char *vertexPath, const char *fragmentPath);
+    Shader(const char *vertexPath, const char *tessControlPath, const char *tessEvalPath,
+           const char *fragmentPath);
+    Shader(const char *computePath);
     ~Shader();
 
     void use();
@@ -22,6 +25,7 @@ class Shader {
     std::map<std::string, int> uniformLocations;
 
     int getUniformLocation(const std::string &name);
+    unsigned int compileShader(const char *path, unsigned int type);
 
     static std::string readFile(const char *filePath);
 };

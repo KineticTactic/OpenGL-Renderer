@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <glad/gl.h>
 
 class Vertex;
 class OrbitCamera;
@@ -9,20 +10,21 @@ class Light;
 
 class Chunk {
   private:
-    /// TODO: Do i really need to store these?
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
+    std::vector<float> heightMap;
 
-    unsigned int vao;
-    unsigned int vbo;
-    unsigned int ebo;
+    unsigned int textureID;
 
     glm::vec3 worldPos;
 
+    bool generated = false;
+    std::vector<bool> generatedLODs;
+
     static float chunkSize;
     static float cellSize;
+    inline static int heightMapRes = 256;
 
-    bool generated = false;
+    inline static GLuint vao = 0;
+    inline static GLuint vbo = 0;
 
   public:
     Chunk(int chunkX, int chunkZ);
@@ -36,5 +38,6 @@ class Chunk {
         return this->generated;
     }
 
-    static float heightFunc(glm::vec2 pos);
+    static void generateBuffers();
+    static void deleteBuffers();
 };

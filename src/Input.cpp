@@ -11,9 +11,9 @@ void Input::init(GLFWwindow *window, OrbitCamera *camera) {
     Input::window = window;
 }
 
-void Input::processInput() {
+void Input::processInput(double dt) {
 
-    float speed = 3.f;
+    float speed = 600.f * dt;
     if (glfwGetKey(Input::window, GLFW_KEY_W) == GLFW_PRESS) {
         Input::camera->move(glm::vec3(0.0f, 0.0f, -speed));
     }

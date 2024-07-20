@@ -39,7 +39,7 @@ void OrbitCamera::orbit(glm::vec2 offset) {
 }
 
 void OrbitCamera::zoom(float offset) {
-    this->radius += offset / 0.01f;
+    this->radius += offset / 0.05f;
 
     if (this->radius < 0.1f) {
         this->radius = 0.1f;

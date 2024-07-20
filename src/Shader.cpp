@@ -64,6 +64,83 @@ Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     glDeleteShader(fragmentShader);
 }
 
+Shader::Shader(const char *vertexPath, const char *tessControlPath, const char *tessEvalPath,
+               const char *fragmentPath) {
+
+    unsigned int vertexShader = compileShader(vertexPath, GL_VERTEX_SHADER);
+    unsigned int tessControlShader = compileShader(tessControlPath, GL_TESS_CONTROL_SHADER);
+    unsigned int tessEvalShader = compileShader(tessEvalPath, GL_TESS_EVALUATION_SHADER);
+    unsigned int fragmentShader = compileShader(fragmentPath, GL_FRAGMENT_SHADER);
+
+    // Link the shaders
+    this->programID = glCreateProgram();
+    glAttachShader(this->programID, vertexShader);
+    glAttachShader(this->programID, tessControlShader);
+    glAttachShader(this->programID, tessEvalShader);
+    glAttachShader(this->programID, fragmentShader);
+    glLinkProgram(this->programID);
+
+    // Check for linking errors
+    int success;
+    char infoLog[512];
+    glGetProgramiv(this->programID, GL_LINK_STATUS, &success);
+
+    if (!success) {
+        glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        assert(false);
+    } else {
+        std::cout << "[SHADER]: Shader program linked successfully\n";
+    }
+
+    // Delete the shaders
+    glDeleteShader(vertexShader);
+    glDeleteShader(tessControlShader);
+    glDeleteShader(tessEvalShader);
+    glDeleteShader(fragmentShader);
+}
+
+Shader::Shader(const char *computePath) {
+    // Load shader from file
+    std::string computeSource = readFile(computePath);
+
+    const char *computeSourceC = computeSource.c_str();
+
+    // Load the compute shader
+    unsigned int computeShader = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(computeShader, 1, &computeSourceC, NULL);
+    glCompileShader(computeShader);
+
+    // Check for shader compile errors
+    int success;
+    char infoLog[512];
+    glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(computeShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" << infoLog << std::endl;
+    } else {
+        std::cout << "[SHADER]: Compute shader compiled successfully (" << computePath << ")\n";
+    }
+
+    // Link the shaders
+    this->programID = glCreateProgram();
+    glAttachShader(this->programID, computeShader);
+    glLinkProgram(this->programID);
+
+    // Check for linking errors
+    glGetProgramiv(this->programID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(this->programID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        assert(false);
+    } else {
+        std::cout << "[SHADER]: Shader program linked successfully\n";
+    }
+
+    // Delete the shaders
+    glDeleteShader(computeShader);
+}
+
 Shader::~Shader() {
     glDeleteProgram(this->programID);
 }
@@ -97,6 +174,30 @@ int Shader::getUniformLocation(const std::string &name) {
         this->uniformLocations[name] = glGetUniformLocation(this->programID, name.c_str());
     }
     return this->uniformLocations[name];
+}
+
+unsigned int Shader::compileShader(const char *path, unsigned int type) {
+    std::string source = readFile(path);
+    const char *sourceC = source.c_str();
+
+    unsigned int shader = glCreateShader(type);
+    glShaderSource(shader, 1, &sourceC, NULL);
+    glCompileShader(shader);
+
+    // Check for shader compile errors
+    int success;
+    char infoLog[512];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+    if (!success) {
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::COMPILATION_FAILED: " << path << "\n" << infoLog << std::endl;
+        assert(false);
+    } else {
+        std::cout << "[SHADER]: Shader compiled successfully (" << path << ")\n";
+    }
+
+    return shader;
 }
 
 std::string Shader::readFile(const char *filePath) {
