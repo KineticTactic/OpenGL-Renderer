@@ -7,10 +7,36 @@ layout(r32f, binding = 0) uniform image2D heightMap;
 uniform vec3 worldPos;
 uniform int heightMapRes;
 
+float random(vec3 x) {
+	return fract(sin(x.x + x.y * 57.0 + x.z * 113.0) * 43758.5453);
+}
+
+float interpolate(float a, float b, float c, float d, float x) {
+	float p = (d - c) - (a - b);
+
+	return x * (x * (x * p + ((a - b) - p)) + (c - a)) + b;
+}
+
+float sampleX(vec3 at) {
+	float floored = floor(at.x);
+
+	return interpolate(random(vec3(floored - 1.0, at.yz)), random(vec3(floored, at.yz)), random(vec3(floored + 1.0, at.yz)), random(vec3(floored + 2.0, at.yz)), fract(at.x)) * 0.5 + 0.25;
+}
+
+float sampleY(vec3 at) {
+	float floored = floor(at.y);
+
+	return interpolate(sampleX(vec3(at.x, floored - 1.0, at.z)), sampleX(vec3(at.x, floored, at.z)), sampleX(vec3(at.x, floored + 1.0, at.z)), sampleX(vec3(at.x, floored + 2.0, at.z)), fract(at.y));
+}
+
+float cubicNoise(vec3 at) {
+	float floored = floor(at.z);
+
+	return interpolate(sampleY(vec3(at.xy, floored - 1.0)), sampleY(vec3(at.xy, floored)), sampleY(vec3(at.xy, floored + 1.0)), sampleY(vec3(at.xy, floored + 2.0)), fract(at.z));
+}
 vec3 permute(vec3 x) {
 	return mod(((x * 34.0) + 1.0) * x, 289.0);
 }
-
 float snoise(vec2 v) {
 	const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
 	vec2 i = floor(v + dot(v, C.yy));
@@ -40,14 +66,44 @@ float ridgenoise(vec2 v) {
 	return 2 * (0.5 - abs(0.5 - snoise(v)));
 }
 
+float octaveRidgeNoise(vec2 v, int octaves, float freq, float gain) {
+	float value = 0.0;
+	float amplitude = 1.0;
+	float frequency = freq;
+	float maxVal = 0.0;
+
+	vec2 grad = vec2(0.0, 0.0);
+
+	for(int i = 0; i < octaves; i++) {
+		float noise = ridgenoise(v * frequency);
+
+		value += noise * amplitude;
+
+		maxVal += amplitude;
+		amplitude *= gain;
+		frequency *= 2.0;
+	}
+
+	return value / maxVal;
+}
+
 float octaveNoise(vec2 v, int octaves, float freq, float gain) {
 	float value = 0.0;
 	float amplitude = 1.0;
 	float frequency = freq;
 	float maxVal = 0.0;
 
+	vec2 grad = vec2(0.0, 0.0);
+
 	for(int i = 0; i < octaves; i++) {
-		value += snoise(v * frequency) * amplitude;
+		// vec3 noise = cubicNoise(vec3(v, 0.0) * frequency);
+		float noise = snoise(v * frequency);
+
+		// grad += noise.yz * amplitude;
+		// float m = length(grad);
+		// float k = 0.3;
+		value += noise.x * amplitude;
+
 		maxVal += amplitude;
 		amplitude *= gain;
 		frequency *= 2.0;
@@ -57,15 +113,28 @@ float octaveNoise(vec2 v, int octaves, float freq, float gain) {
 }
 
 float heightFunc(vec2 v) {
-	float highFreq = octaveNoise(v, 10, 0.01, 0.5);
-	highFreq = pow(highFreq, 1.4) * 0.05;
+	float altitude = octaveNoise(v, 6, 0.0002, 0.3).x;
+	altitude = pow(altitude, 1) * 4;
 
-	float lowFreq = octaveNoise(v, 4, 0.0005, 0.35);
-	lowFreq = pow(lowFreq, 2) * 2;
+	float plainHeight = altitude + octaveNoise(v, 6, 0.0002, 0.5) + octaveNoise(v + vec2(1000000, 100000), 6, 0.0005, 0.5) * 1;
+	float hillHeight = altitude + octaveNoise(v, 10, 0.001, 0.3) * 1.5;
+	float mountainHeight = altitude + octaveNoise(v, 10, 0.002, 0.3) * 2 + octaveNoise(v, 10, 0.01, 0.5) * 0.1 + octaveRidgeNoise(v, 4, 0.005, 0.5) * 0.1;
 
-	float highhighFreq = octaveNoise(v, 6, 2, 0.5) * 0.005;
-
-	float y = lowFreq + highFreq + highhighFreq;
+	float y = 0;
+	if(altitude < 0.5) {
+		float t = smoothstep(0.0, 0.5, altitude);
+		y = mix(0.0, plainHeight, t);
+	} else if(altitude < 2.0) {
+        // Interpolate between plains and hills
+		float t = smoothstep(1.0, 2.0, altitude);
+		y = mix(plainHeight, hillHeight, t);
+	} else if(altitude < 3.0) {
+        // Interpolate between hills and mountains
+		float t = smoothstep(2.0, 3.0, altitude);
+		y = mix(hillHeight, mountainHeight, t);
+	} else {
+		y = mountainHeight;
+	}
 	return y * 256;
 }
 
@@ -73,7 +142,7 @@ void main() {
 	ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
 	vec2 pixelWorldPos = vec2(pixel) / heightMapRes * 256 + worldPos.xz;
 
-	float height = heightFunc(pixelWorldPos * 2);
+	float height = heightFunc(pixelWorldPos);
 
 	imageStore(heightMap, pixel, vec4(height, 0.0, 0.0, 0.0));
 }

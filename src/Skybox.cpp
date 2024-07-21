@@ -5,7 +5,7 @@
 #include <GLAD/gl.h>
 
 #include "Shader.hpp"
-#include "OrbitCamera.hpp"
+#include "Camera.hpp"
 
 Shader *Skybox::shader = nullptr;
 
@@ -34,7 +34,7 @@ Skybox::~Skybox() {
     glDeleteBuffers(1, &this->vbo);
 }
 
-void Skybox::render(OrbitCamera &camera) {
+void Skybox::render(Camera &camera) {
     Skybox::shader->use();
     Skybox::shader->setMat4("view", glm::mat4(glm::mat3(camera.getViewMatrix())));
     Skybox::shader->setMat4("projection", camera.getProjectionMatrix());

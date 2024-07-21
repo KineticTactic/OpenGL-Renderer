@@ -2,7 +2,7 @@
 
 in vec3 normal;
 in vec3 fragPos;
-in vec3 color;
+// in vec3 color;
 in vec4 fragPosLightSpace;
 
 out vec4 FragColor;
@@ -20,6 +20,17 @@ struct Light {
 uniform Light light;
 uniform vec3 viewPos;
 uniform sampler2D shadowMap;
+uniform sampler2D rockTex;
+uniform sampler2D snowTex;
+
+// vec3 acesFilm(const vec3 x) {
+//     const float a = 2.51;
+//     const float b = 0.03;
+//     const float c = 2.43;
+//     const float d = 0.59;
+//     const float e = 0.14;
+//     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+// }
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     // perform perspective divide to convert into NDC
@@ -48,6 +59,126 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     return shadow;
 }
 
+float sum(vec3 v) {
+    return v.x + v.y + v.z;
+}
+
+// Lifted from https://www.shadertoy.com/view/Xtl3zf
+vec4 texture_UV(in sampler2D srcTexture, in vec2 x) {
+    float k = texture(srcTexture, 0.0025 * x.xy).x; // cheap (cache friendly) lookup
+    float l = k * 8.0;
+    float f = fract(l);
+
+    float ia = floor(l + 0.5); // suslik's method (see comments)
+    float ib = floor(l);
+    f = min(f, 1.0 - f) * 2.0;
+
+    vec2 offa = sin(vec2(3.0, 7.0) * ia); // can replace with any other hash
+    vec2 offb = sin(vec2(3.0, 7.0) * ib); // can replace with any other hash
+
+    vec4 cola = texture(srcTexture, vec2(x.xy + offa));
+    vec4 colb = texture(srcTexture, vec2(x.xy + offb));
+
+    return mix(cola, colb, smoothstep(0.2, 0.8, f - 0.1 * sum(cola.xyz - colb.xyz)));
+}
+
+vec4 triplanarUV(vec3 pos, vec3 normal, sampler2D tex) {
+    float _TRI_SCALE = 2000.0;
+    vec4 dx = texture_UV(rockTex, vec2(pos.zy / _TRI_SCALE));
+    vec4 dy = texture_UV(rockTex, vec2(pos.xz / _TRI_SCALE));
+    vec4 dz = texture_UV(rockTex, vec2(pos.xy / _TRI_SCALE));
+
+    vec3 weights = abs(normal.xyz);
+    weights = weights / (weights.x + weights.y + weights.z);
+
+    return dx * weights.x + dy * weights.y + dz * weights.z;
+}
+
+vec4 hash4(vec2 p) {
+    return fract(sin(vec4(1.0 + dot(p, vec2(37.0, 17.0)), 2.0 + dot(p, vec2(11.0, 47.0)), 3.0 + dot(p, vec2(41.0, 29.0)), 4.0 + dot(p, vec2(23.0, 31.0)))) * 103.0);
+}
+
+vec4 textureNoTile(sampler2D samp, in vec2 uv) {
+    ivec2 iuv = ivec2(floor(uv));
+    vec2 fuv = fract(uv);
+
+    // generate per-tile transform
+    vec4 ofa = hash4(iuv + ivec2(0, 0));
+    vec4 ofb = hash4(iuv + ivec2(1, 0));
+    vec4 ofc = hash4(iuv + ivec2(0, 1));
+    vec4 ofd = hash4(iuv + ivec2(1, 1));
+
+    vec2 ddx = dFdx(uv);
+    vec2 ddy = dFdy(uv);
+
+    // transform per-tile uvs
+    ofa.zw = sign(ofa.zw - 0.5);
+    ofb.zw = sign(ofb.zw - 0.5);
+    ofc.zw = sign(ofc.zw - 0.5);
+    ofd.zw = sign(ofd.zw - 0.5);
+
+    // uv's, and derivatives (for correct mipmapping)
+    vec2 uva = uv * ofa.zw + ofa.xy, ddxa = ddx * ofa.zw, ddya = ddy * ofa.zw;
+    vec2 uvb = uv * ofb.zw + ofb.xy, ddxb = ddx * ofb.zw, ddyb = ddy * ofb.zw;
+    vec2 uvc = uv * ofc.zw + ofc.xy, ddxc = ddx * ofc.zw, ddyc = ddy * ofc.zw;
+    vec2 uvd = uv * ofd.zw + ofd.xy, ddxd = ddx * ofd.zw, ddyd = ddy * ofd.zw;
+
+    // fetch and blend
+    vec2 b = smoothstep(0.25, 0.75, fuv);
+
+    return mix(mix(textureGrad(samp, uva, ddxa, ddya), textureGrad(samp, uvb, ddxb, ddyb), b.x), mix(textureGrad(samp, uvc, ddxc, ddyc), textureGrad(samp, uvd, ddxd, ddyd), b.x), b.y);
+}
+
+vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
+    vec3 color;
+
+    // Normalize height to the range [0, 1]
+    float normalizedHeight = height / 256.0;
+    float steepness = exp(-0.8 * normal.y);
+
+    float weight = 0.0;
+    if(normalizedHeight < 0.5) {
+        // water color
+        color = vec3(0.0, 0.0, 0.5);
+    } else if(normalizedHeight < 2) {
+        // plains color
+        color = vec3(0.17, 0.49, 0.17);
+    } else if(normalizedHeight < 3) {
+        // rocky color
+        color = vec3(0.37, 0.22, 0.16);
+    } else {
+        // snowy color
+        vec3 snowColor = vec3(1.0);
+        // vec3 snowColor = mix(vec3(1.0), textureNoTile(snowTex, vec2(fragPos.x, fragPos.z) / 20.0).rgb, 0.0);
+        vec3 rockyColor = textureNoTile(rockTex, vec2(fragPos.x, fragPos.z) / 20.0).rgb;
+        if(normal.y < 0.5) {
+            color = rockyColor;
+        } else if(normal.y < 0.5) {
+            color = mix(rockyColor, snowColor, (normal.y - 0.4) / 0.1);
+        } else {
+            color = snowColor;
+        }
+
+        // color = rockyColor;
+    }
+
+    // Additional blending based on steepness
+    // vec3 snowColor = vec3(1.0);
+    // vec3 rockyColor = vec3(0.37, 0.22, 0.16);
+
+    // if(steepness > 0.5) {
+    //     weight = 0.0;
+    // } else {
+    //     weight = 1.0;
+    // }
+
+    // Blend between grass and rocky color based on steepness
+    // color = mix(rockyColor, snowColor, weight);
+    // color = texture(rockTex, vec2(fragPos.x, fragPos.z) / 1000.0).rgb;
+    // color = triplanarUV(fragPos, normal, rockTex).rgb;
+    return color;
+}
+
 void main() {
     float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * light.color;
@@ -57,7 +188,7 @@ void main() {
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * light.color;
 
-    float specularStrength = 0.1;
+    float specularStrength = 0.8;
     vec3 viewDist = viewPos - fragPos;
     vec3 viewDir = normalize(viewDist);
     vec3 reflectDir = reflect(-lightDir, norm);
@@ -73,23 +204,14 @@ void main() {
             light.quadratic * (distance * distance)); // Point light
     }
 
-    // vec3 result = (diffuse + ambient + specular) * color * attenuation * light.intensity;
-
-        // calculate shadow
+    vec3 color = getColorFromHeightAndNormal(fragPos.y, norm);
     float shadow = ShadowCalculation(fragPosLightSpace, norm, lightDir);
-    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * color * attenuation * light.intensity;    
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * color * attenuation * light.intensity;
 
-    // Fog
-//     float fog_maxdist = 5000;
-//     float fog_mindist = 1000;
-//     vec3 fog_colour = vec3(0.8);
-
-// // Calculate fog
-//     float dist = length(viewDist);
-//     float fog_factor = (fog_maxdist - dist) /
-//         (fog_maxdist - fog_mindist);
-//     fog_factor = clamp(fog_factor, 0.0, 1.0);
-    // result = mix(fog_colour, result, fog_factor);
+    // float fogDensity = 0.00000001;
+    // float fogFactor = exp(-fogDensity * abs(length(viewDist)));
+    // vec3 fogColor = vec3(0.5, 0.5, 0.5);
+    // result = mix(result, fogColor, fogFactor);
 
     FragColor = vec4(result, 1.0);
     // FragColor = vec4(vec3(shadow), 1.0);

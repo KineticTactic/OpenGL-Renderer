@@ -5,7 +5,7 @@
 #include <glad/gl.h>
 
 class Vertex;
-class OrbitCamera;
+class Camera;
 class Light;
 class Shader;
 
@@ -13,7 +13,8 @@ class Chunk {
   private:
     std::vector<float> heightMap;
 
-    unsigned int textureID;
+    unsigned int heightMapID;
+    unsigned int normalID;
 
     glm::vec3 worldPos;
 

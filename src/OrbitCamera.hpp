@@ -1,19 +1,14 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "Camera.hpp"
 
-class OrbitCamera {
+class OrbitCamera : public Camera {
   private:
     glm::vec3 target;
-    glm::mat4 viewMatrix;
-    glm::mat4 projectionMatrix;
-    glm::mat4 viewProjectionMatrix;
 
     float theta;
     float phi;
     float radius;
-
-    float aspect;
 
   public:
     OrbitCamera(glm::vec3 target);
@@ -22,15 +17,6 @@ class OrbitCamera {
     void orbit(glm::vec2 offset);
     void zoom(float offset);
 
-    void applyToShader(class Shader &shader);
-
-    const glm::mat4 &getViewMatrix();
-    const glm::mat4 &getProjectionMatrix();
-    glm::vec3 getPosition() const;
-
-    void setAspectRatio(float aspectRatio);
-
   private:
-    void updateViewMatrix();
-    void updateProjectionMatrix();
+    void updateViewMatrix() override;
 };

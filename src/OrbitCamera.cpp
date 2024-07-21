@@ -1,17 +1,15 @@
 #include "OrbitCamera.hpp"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "Shader.hpp"
 
-OrbitCamera::OrbitCamera(glm::vec3 target) {
+OrbitCamera::OrbitCamera(glm::vec3 target) : Camera(1366.0f / 768.0f) {
     this->target = target;
     this->theta = 0.0f;
     this->phi = 0.03f;
-    this->radius = 500.0f;
-    this->aspect = 1366.0f / 768.0f;
+    this->radius = 2000.0f;
     this->updateViewMatrix();
     this->updateProjectionMatrix();
 }
@@ -39,7 +37,7 @@ void OrbitCamera::orbit(glm::vec2 offset) {
 }
 
 void OrbitCamera::zoom(float offset) {
-    this->radius += offset / 0.05f;
+    this->radius += offset / 0.01f;
 
     if (this->radius < 0.1f) {
         this->radius = 0.1f;
@@ -48,41 +46,14 @@ void OrbitCamera::zoom(float offset) {
     this->updateViewMatrix();
 }
 
-void OrbitCamera::applyToShader(Shader &shader) {
-    shader.setMat4("viewProjection", this->viewProjectionMatrix);
-    shader.setVec3("viewPos", this->getPosition());
-}
-
-const glm::mat4 &OrbitCamera::getViewMatrix() {
-    return this->viewMatrix;
-}
-
-const glm::mat4 &OrbitCamera::getProjectionMatrix() {
-    return this->projectionMatrix;
-}
-
-glm::vec3 OrbitCamera::getPosition() const {
-    return this->target + glm::vec3(this->radius * sin(this->theta) * cos(this->phi),
-                                    this->radius * sin(this->phi),
-                                    this->radius * cos(this->phi) * cos(this->theta));
-}
-
-void OrbitCamera::setAspectRatio(float aspectRatio) {
-    this->aspect = aspectRatio;
-    this->updateProjectionMatrix();
-}
-
 void OrbitCamera::updateViewMatrix() {
-    glm::vec3 position = this->getPosition();
-
     // std::cout << "Position: " << position.x << ", " << position.y << ", " << position.z << ", ";
     // std::cout << "Rotation: " << this->theta << ", " << this->phi << std::endl;
 
-    this->viewMatrix = glm::lookAt(position, this->target, glm::vec3(0.0f, 1.0f, 0.0f));
-    this->viewProjectionMatrix = this->projectionMatrix * this->viewMatrix;
-}
+    this->position = this->target + glm::vec3(this->radius * sin(this->theta) * cos(this->phi),
+                                              this->radius * sin(this->phi),
+                                              this->radius * cos(this->phi) * cos(this->theta));
 
-void OrbitCamera::updateProjectionMatrix() {
-    this->projectionMatrix = glm::perspective(glm::radians(45.0f), this->aspect, 0.1f, 10000.0f);
+    this->viewMatrix = glm::lookAt(this->position, this->target, glm::vec3(0.0f, 1.0f, 0.0f));
     this->viewProjectionMatrix = this->projectionMatrix * this->viewMatrix;
 }

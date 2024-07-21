@@ -4,10 +4,11 @@
 #include <FastNoise/FastNoiseLite.h>
 #include <iostream>
 #include <algorithm>
+#include <SOIL2/SOIL2.h>
 
 #include "Vertex.hpp"
 #include "Shader.hpp"
-#include "OrbitCamera.hpp"
+#include "Camera.hpp"
 #include "Light.hpp"
 #include "Chunk.hpp"
 
@@ -54,6 +55,16 @@ Terrain::Terrain()
     this->shader.use();
     this->shader.setInt("heightMapRes", Chunk::heightMapRes - 2);
     this->shader.setFloat("chunkSize", Chunk::chunkSize);
+
+    this->rockTex =
+        SOIL_load_OGL_texture("./assets/textures/rock_2k.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+                              SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
+                                  SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_TEXTURE_REPEATS);
+    // this->snowTex =
+    //     SOIL_load_OGL_texture("./assets/textures/snow_4k.jpg", SOIL_LOAD_AUTO,
+    //     SOIL_CREATE_NEW_ID,
+    //                           SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
+    //                               SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_TEXTURE_REPEATS);
 }
 
 Terrain::~Terrain() {
@@ -64,9 +75,7 @@ Terrain::~Terrain() {
     Chunk::deleteBuffers();
 }
 
-void Terrain::update(OrbitCamera &camera) {
-
-    // bool isCameraOnChunk = false;
+void Terrain::update(Camera &camera) {
     int numPerFrame = 10;
     int generated = 0;
     for (auto &chunk : this->chunks) {
@@ -80,17 +89,26 @@ void Terrain::update(OrbitCamera &camera) {
     }
 }
 
-void Terrain::render(OrbitCamera &camera, Light &light, unsigned int depthMap,
+void Terrain::render(Camera &camera, Light &light, unsigned int depthMap,
                      glm::mat4 &lightSpaceMatrix) {
     this->shader.use();
     camera.applyToShader(this->shader);
     light.applyToShader(this->shader);
     shader.setMat4("view", camera.getViewMatrix());
-    shader.setInt("shadowMap", 1);
     shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    shader.setInt("shadowMap", 1);
+    shader.setInt("rockTex", 2);
+    // shader.setInt("snowTex", 3);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depthMap);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, this->rockTex);
+
+    // glActiveTexture(GL_TEXTURE3);
+    // glBindTexture(GL_TEXTURE_2D, this->snowTex);
 
     for (auto &chunk : this->chunks) {
         chunk->render(this->shader);

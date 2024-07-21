@@ -8,6 +8,7 @@
 #include "Context.hpp"
 #include "Shader.hpp"
 #include "OrbitCamera.hpp"
+#include "FlyCamera.hpp"
 #include "Input.hpp"
 #include "Light.hpp"
 #include "Renderable.hpp"
@@ -53,7 +54,7 @@ int main() {
     Context::initOpenGL();
     Debug::init();
 
-    OrbitCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+    FlyCamera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 
     Context::setCamera(window, camera);
     Input::init(window, &camera);
@@ -66,16 +67,16 @@ int main() {
     light.setDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
     light.setIntensity(0.7f);
 
-    camera.orbit(glm::vec2(0.0f, 50.0f));
+    // camera.orbit(glm::vec2(0.0f, 50.0f));
 
     Renderable cube(Loader::loadOBJ("./assets/monkey.obj"));
-    cube.setScale(glm::vec3(30.0f));
-    cube.setPosition(glm::vec3(0.0f, 100.0f, 0.0f));
+    cube.setScale(glm::vec3(1.0f));
+    cube.setPosition(glm::vec3(0.0f, 1000.0f, 0.0f));
     Renderable lightCube(cubeVertices);
     lightCube.setScale(glm::vec3(0.2f));
     Renderable plane(planeVertices);
-    plane.setPosition(glm::vec3(0.0f, 30.0f, 0.0f));
-    plane.setScale(glm::vec3(3000.0f));
+    plane.setPosition(glm::vec3(0.0f, 256.0f, 0.0f));
+    plane.setScale(glm::vec3(5000.0f));
 
     Skybox::initShader();
     Skybox skybox("./assets/skybox/compressed/");
@@ -85,7 +86,7 @@ int main() {
     GLuint depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
 
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 
     unsigned int depthMap;
     glGenTextures(1, &depthMap);
@@ -112,6 +113,11 @@ int main() {
 
         Input::processInput(dt);
         terrain.update(camera);
+
+        if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_E) == GLFW_PRESS) {
+            cube.setPosition(camera.getPosition());
+        }
+
         // camera.orbit(glm::vec2(1.0f, 0.0f));
 
         // glm::vec3 lightPos = glm::vec3(sin(glfwGetTime() * 2) * 4,
@@ -119,14 +125,14 @@ int main() {
         //                                + 3, cos(glfwGetTime() * 2) * 4);
         // light.setPosition(lightPos);
         // lightCube.setPosition(lightPos);
-        // glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() * 2));
-        // light.setDirection(lightDir);
+        // glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() *
+        // 2)); light.setDirection(lightDir);
 
         // DEPTH PASS
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        // glCullFace(GL_FRONT);
+        // // glCullFace(GL_FRONT);
 
         float near_plane = 0.1f, far_plane = 7500.f;
         glm::mat4 lightProjection =
@@ -158,6 +164,7 @@ int main() {
         // camera.applyToShader(flatShader);
         // lightCube.render(flatShader);
 
+        // terrain.render(camera, light, depthMap, lightSpaceMatrix);
         terrain.render(camera, light, depthMap, lightSpaceMatrix);
 
         // GL_MAX_TESS_GEN_LEVEL

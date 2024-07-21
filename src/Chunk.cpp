@@ -11,8 +11,17 @@
 Chunk::Chunk(int chunkX, int chunkZ)
     : worldPos({chunkX * Chunk::chunkSize, 0.0f, chunkZ * Chunk::chunkSize}) {
 
-    glGenTextures(1, &this->textureID);
-    glBindTexture(GL_TEXTURE_2D, this->textureID);
+    glGenTextures(1, &this->heightMapID);
+    glBindTexture(GL_TEXTURE_2D, this->heightMapID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, heightMapRes, heightMapRes, 0, GL_RED, GL_FLOAT,
+                 nullptr);
+
+    glGenTextures(1, &this->normalID);
+    glBindTexture(GL_TEXTURE_2D, this->normalID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -22,7 +31,7 @@ Chunk::Chunk(int chunkX, int chunkZ)
 }
 
 Chunk::~Chunk() {
-    glDeleteTextures(1, &this->textureID);
+    glDeleteTextures(1, &this->heightMapID);
 }
 
 // Vertex layout: vec3 pos, vec2 tex
@@ -88,7 +97,7 @@ void Chunk::deleteBuffers() {
 void Chunk::generate(Shader &compute) {
     double start = glfwGetTime();
 
-    glBindImageTexture(0, this->textureID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
     compute.use();
     compute.setVec3("worldPos", this->worldPos);
@@ -97,10 +106,10 @@ void Chunk::generate(Shader &compute) {
     // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // std::vector<float> data(heightMapRes * heightMapRes);
-    // glBindTexture(GL_TEXTURE_2D, this->textureID); // Make sure to bind the texture before
-    // reading glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data.data());
+    // glBindTexture(GL_TEXTURE_2D, this->heightMapID); // Make sure to bind the texture before
+    // glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data.data());
 
-    // Debug: print out some values to check if the texture was updated
+    // //// Debug: print out some values to check if the texture was updated
     // for (int i = 0; i < 10; ++i) {
     //     std::cout << data[i] << std::endl;
     // }
@@ -119,7 +128,7 @@ void Chunk::render(Shader &shader) {
     shader.setInt("heightMap", 0);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->textureID);
+    glBindTexture(GL_TEXTURE_2D, this->heightMapID);
 
     glBindVertexArray(Chunk::vao);
     glDrawArrays(GL_PATCHES, 0, subdivisions * subdivisions * 4);

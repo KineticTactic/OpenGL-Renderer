@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "OrbitCamera.hpp"
+#include "Camera.hpp"
 
 GLFWwindow *Context::createWindow() {
     GLFWwindow *window;
@@ -24,6 +24,9 @@ GLFWwindow *Context::createWindow() {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     // glfwSwapInterval(0);
+
+    // hide cursor
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     return window;
 }
@@ -136,7 +139,7 @@ void Context::initOpenGL() {
     glPatchParameteri(GL_PATCH_VERTICES, 4);
 }
 
-void Context::setCamera(GLFWwindow *window, OrbitCamera &camera) {
+void Context::setCamera(GLFWwindow *window, Camera &camera) {
     glfwSetWindowUserPointer(window, &camera);
 }
 
@@ -149,6 +152,6 @@ glm::vec2 Context::getFramebufferSize() {
 void Context::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
     std::cout << "Resized to " << width << "x" << height << std::endl;
-    OrbitCamera *camera = (OrbitCamera *)glfwGetWindowUserPointer(window);
+    Camera *camera = (Camera *)glfwGetWindowUserPointer(window);
     camera->setAspectRatio((float)width / (float)height);
 }

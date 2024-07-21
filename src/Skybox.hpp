@@ -4,7 +4,7 @@
 #include <vector>
 
 class Shader;
-class OrbitCamera;
+class Camera;
 
 class Skybox {
   private:
@@ -17,7 +17,7 @@ class Skybox {
     Skybox(const std::string path);
     ~Skybox();
 
-    void render(OrbitCamera &camera);
+    void render(Camera &camera);
 
     static void initShader();
 };

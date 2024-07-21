@@ -5,6 +5,7 @@ This is an OpenGL renderer that i am building mostly to showcase my knowledge of
 ## Development Screenshots
 
 ![Screenshot 1](screenshots/monke.png)
+![Screenshot 2](screenshots/moutain.png)
 
 ## Libraries Used
 
