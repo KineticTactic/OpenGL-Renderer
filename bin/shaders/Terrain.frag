@@ -213,6 +213,16 @@ void main() {
     // vec3 fogColor = vec3(0.5, 0.5, 0.5);
     // result = mix(result, fogColor, fogFactor);
 
+    // float fogStart = 1000.0;
+    // float fogEnd = 4000.0;
+    float fogDensity = 0.0002;
+    float fragDistance = length(viewDist);
+    float fogFactor = 1.0 - exp(-fogDensity * fragDistance);
+    fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    // Mix the texture color with the fog color based on the fog factor
+    result = mix(result, vec3(191.0 / 255, 215.0 / 255, 227.0 / 255), fogFactor);
+
     FragColor = vec4(result, 1.0);
     // FragColor = vec4(vec3(shadow), 1.0);
     // FragColor = vec4(norm, 1.0);

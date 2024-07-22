@@ -2,9 +2,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-FlyCamera::FlyCamera(glm::vec3 position)
-    : Camera(1366.0f / 768.0f), facing(facing), pitch(0.0f), yaw(0.0f) {
+FlyCamera::FlyCamera(glm::vec3 position) : Camera(1366.0f / 768.0f), pitch(0.0f), yaw(0.0f) {
     this->position = position;
+    this->facing = glm::vec3(0.0f, 0.0f, 1.0f);
     this->updateViewMatrix();
 }
 

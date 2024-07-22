@@ -45,9 +45,9 @@ Terrain::Terrain()
       compute("shaders/TerrainGen.comp"),
       depthShader("shaders/terrain.vert", "shaders/TerrainDepth.tesc", "shaders/TerrainDepth.tese",
                   "shaders/TerrainDepth.frag") {
-    std::vector<IntCoords> coords = Spiral(20, 20);
+    std::vector<IntCoords> coords = Spiral(3, 3);
     for (auto &coord : coords) {
-        this->chunks.push_back(new Chunk(coord.x, coord.y));
+        // this->chunks.push_back(new Chunk(coord.x, coord.y));
     }
 
     // TODO: Put into static method
