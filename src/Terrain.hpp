@@ -13,7 +13,8 @@ class Chunk;
 class Terrain {
   private:
     Shader shader;
-    Shader compute;
+    Shader terrainGenCompute;
+    Shader terrainNormalCompute;
     Shader depthShader;
 
     unsigned int rockTex;

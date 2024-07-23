@@ -14,7 +14,6 @@ class Chunk {
     std::vector<float> heightMap;
 
     unsigned int heightMapID;
-    unsigned int normalID;
 
     glm::vec3 worldPos;
 
@@ -24,14 +23,14 @@ class Chunk {
     inline static GLuint vbo = 0;
 
   public:
-    inline static float chunkSize = 254.f;
+    inline static float chunkSize = 255.f;
     inline static int subdivisions = 8;
     inline static int heightMapRes = 256;
 
     Chunk(int chunkX, int chunkZ);
     ~Chunk();
 
-    void generate(Shader &compute);
+    void generate(Shader &terrainGenCompute, Shader &terrainNormalCompute);
 
     void render(Shader &shader);
 

@@ -6,6 +6,7 @@ This is an OpenGL renderer that i am building mostly to showcase my knowledge of
 
 ![Screenshot 1](screenshots/monke.png)
 ![Screenshot 2](screenshots/moutain.png)
+![Screenshot 3](screenshots/mountain2.png)
 
 ## Libraries Used
 

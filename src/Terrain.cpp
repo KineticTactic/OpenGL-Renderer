@@ -42,12 +42,13 @@ std::vector<IntCoords> Spiral(int X, int Y) {
 Terrain::Terrain()
     : shader("shaders/terrain.vert", "shaders/terrain.tesc", "shaders/terrain.tese",
              "shaders/terrain.frag"),
-      compute("shaders/TerrainGen.comp"),
+      terrainGenCompute("shaders/TerrainGen.comp"),
+      terrainNormalCompute("shaders/TerrainNormal.comp"),
       depthShader("shaders/terrain.vert", "shaders/TerrainDepth.tesc", "shaders/TerrainDepth.tese",
                   "shaders/TerrainDepth.frag") {
-    std::vector<IntCoords> coords = Spiral(3, 3);
+    std::vector<IntCoords> coords = Spiral(20, 20);
     for (auto &coord : coords) {
-        // this->chunks.push_back(new Chunk(coord.x, coord.y));
+        this->chunks.push_back(new Chunk(coord.x, coord.y));
     }
 
     // TODO: Put into static method
@@ -76,11 +77,11 @@ Terrain::~Terrain() {
 }
 
 void Terrain::update(Camera &camera) {
-    int numPerFrame = 10;
+    int numPerFrame = 2;
     int generated = 0;
     for (auto &chunk : this->chunks) {
         if (!chunk->isGenerated()) {
-            chunk->generate(this->compute);
+            chunk->generate(this->terrainGenCompute, this->terrainNormalCompute);
             generated++;
         }
         if (generated >= numPerFrame) {

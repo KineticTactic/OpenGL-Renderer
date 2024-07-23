@@ -13,7 +13,7 @@ void Input::init(GLFWwindow *window, FlyCamera *camera) {
 
 void Input::processInput(double dt) {
 
-    float speed = 6.f * dt;
+    float speed = 1000.f * dt;
     if (glfwGetKey(Input::window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
         speed *= 5;
     }

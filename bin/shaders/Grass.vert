@@ -11,8 +11,14 @@ out vec3 fragPos;
 uniform mat4 model;
 uniform mat4 viewProjection;
 
+float rand(vec2 co) {
+	return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 void main() {
-	gl_Position = viewProjection * model * vec4(aPos * 2 + aOffset, 1.0);
+	float scale = rand(vec2(gl_InstanceID, gl_InstanceID)) * 1 + 2.0;
+
+	gl_Position = viewProjection * model * vec4(aPos * scale + aOffset + vec3(0, scale / 2, 0), 1.0);
 	// gl_Position = vec4(aPos, 1.0);
 
 	// normal = mat3(transpose(inverse(model))) * aNormal;

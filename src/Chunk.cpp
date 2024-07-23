@@ -17,16 +17,7 @@ Chunk::Chunk(int chunkX, int chunkZ)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, heightMapRes, heightMapRes, 0, GL_RED, GL_FLOAT,
-                 nullptr);
-
-    glGenTextures(1, &this->normalID);
-    glBindTexture(GL_TEXTURE_2D, this->normalID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, heightMapRes, heightMapRes, 0, GL_RED, GL_FLOAT,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, heightMapRes, heightMapRes, 0, GL_RGBA, GL_FLOAT,
                  nullptr);
 }
 
@@ -49,10 +40,10 @@ std::vector<float> generateSplitQuads(float chunkSize, int numSubdivisions, floa
             float z0 = j * step;
             float z1 = (j + 1) * step;
 
-            float s0 = pix + i * texStep;
-            float s1 = pix + (i + 1) * texStep;
-            float t0 = pix + j * texStep;
-            float t1 = pix + (j + 1) * texStep;
+            float s0 = 1 * pix + i * texStep;
+            float s1 = 1 * pix + (i + 1) * texStep;
+            float t0 = 1 * pix + j * texStep;
+            float t1 = 1 * pix + (j + 1) * texStep;
 
             // Add vertices for the current quad
             vertexData.insert(vertexData.end(), {
@@ -61,8 +52,11 @@ std::vector<float> generateSplitQuads(float chunkSize, int numSubdivisions, floa
                                                     x1, 0, z0, s1, t0, // Bottom-right
                                                     x1, 0, z1, s1, t1  // Top-right
                                                 });
+            std::cout << "s0: " << s0 << " t0: " << t0 << " s1: " << s1 << " t1: " << t1
+                      << std::endl;
         }
     }
+    std::cout << "Done" << std::endl;
 
     return vertexData;
 }
@@ -72,7 +66,7 @@ void Chunk::generateBuffers() {
     glBindVertexArray(Chunk::vao);
 
     // Vertex layout: vec3 pos, vec2 tex
-    float pix = 1.0f / heightMapRes;
+    float pix = (1.f / heightMapRes) / 2;
 
     std::vector<float> vertexData = generateSplitQuads(Chunk::chunkSize, Chunk::subdivisions, pix);
 
@@ -94,16 +88,24 @@ void Chunk::deleteBuffers() {
     glDeleteBuffers(1, &Chunk::vbo);
 }
 
-void Chunk::generate(Shader &compute) {
+void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute) {
     double start = glfwGetTime();
 
-    glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+    glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-    compute.use();
-    compute.setVec3("worldPos", this->worldPos);
-    compute.setInt("heightMapRes", heightMapRes);
+    terrainGenCompute.use();
+    terrainGenCompute.setVec3("worldPos", this->worldPos);
+    terrainGenCompute.setInt("heightMapRes", heightMapRes);
+    terrainGenCompute.setFloat("chunkSize", Chunk::chunkSize);
     glDispatchCompute(heightMapRes, heightMapRes, 1);
-    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    terrainNormalCompute.use();
+    terrainNormalCompute.setFloat("chunkSize", Chunk::chunkSize);
+    terrainNormalCompute.setInt("heightMapRes", heightMapRes);
+    glDispatchCompute(heightMapRes, heightMapRes, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     // std::vector<float> data(heightMapRes * heightMapRes);
     // glBindTexture(GL_TEXTURE_2D, this->heightMapID); // Make sure to bind the texture before

@@ -11,10 +11,11 @@ uniform int heightMapRes;
 
 in vec2 TextureCoord[];
 
-out vec3 normal;
+// out vec3 normal;
 out vec3 fragPos;
 // out vec3 color;
 out vec4 fragPosLightSpace;
+out vec2 texCoord;
 
 void main() {
 	float u = gl_TessCoord.x;
@@ -28,6 +29,7 @@ void main() {
 	vec2 t0 = (t01 - t00) * u + t00;
 	vec2 t1 = (t11 - t10) * u + t10;
 	vec2 t = (t1 - t0) * v + t0;
+	// t = (t - vec2(0.5)) * 0.995 + vec2(0.5);
 
 	float height = texture(heightMap, t).r;
 
@@ -57,14 +59,16 @@ void main() {
 
 	// normal generation code, credits:
 	// https://stackoverflow.com/a/5282364/13337535
-	float fx0 = textureOffset(heightMap, t, ivec2(-1.0, 0)).r;
-	float fx1 = textureOffset(heightMap, t, ivec2(1.0, 0)).r;
-	float fy0 = textureOffset(heightMap, t, ivec2(0, -1.0)).r;
-	float fy1 = textureOffset(heightMap, t, ivec2(0, 1.0)).r;
+	// float fx0 = textureOffset(heightMap, t, ivec2(-1.0, 0)).r;
+	// float fx1 = textureOffset(heightMap, t, ivec2(1.0, 0)).r;
+	// float fy0 = textureOffset(heightMap, t, ivec2(0, -1.0)).r;
+	// float fy1 = textureOffset(heightMap, t, ivec2(0, 1.0)).r;
 
-	float eps = chunkSize / float(heightMapRes);
+	// float eps = chunkSize / float(heightMapRes);
 
-	normal = normalize(vec3((fx0 - fx1) / (2 * eps), 1, (fy0 - fy1) / (2 * eps)));
+	// normal = normalize(vec3((fx0 - fx1) / (2 * eps), 1, (fy0 - fy1) / (2 * eps)));
+
+	texCoord = t;
 
 	// color = getColorFromHeightAndNormal(height, normal);
 }

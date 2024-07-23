@@ -1,9 +1,10 @@
 #version 460 core
 
-in vec3 normal;
+// in vec3 normal;
 in vec3 fragPos;
 // in vec3 color;
 in vec4 fragPosLightSpace;
+in vec2 texCoord;
 
 out vec4 FragColor;
 
@@ -22,15 +23,7 @@ uniform vec3 viewPos;
 uniform sampler2D shadowMap;
 uniform sampler2D rockTex;
 uniform sampler2D snowTex;
-
-// vec3 acesFilm(const vec3 x) {
-//     const float a = 2.51;
-//     const float b = 0.03;
-//     const float c = 2.43;
-//     const float d = 0.59;
-//     const float e = 0.14;
-//     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
-// }
+uniform sampler2D heightMap;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
     // perform perspective divide to convert into NDC
@@ -140,10 +133,10 @@ vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
     if(normalizedHeight < 0.5) {
         // water color
         color = vec3(0.0, 0.0, 0.5);
-    } else if(normalizedHeight < 2) {
+    } else if(normalizedHeight < 2.5) {
         // plains color
-        color = vec3(0.17, 0.49, 0.17);
-    } else if(normalizedHeight < 3) {
+        color = vec3(0.39, 0.61, 0.2);
+    } else if(normalizedHeight < 3.5) {
         // rocky color
         color = vec3(0.37, 0.22, 0.16);
     } else {
@@ -159,18 +152,7 @@ vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
             color = snowColor;
         }
 
-        // color = rockyColor;
     }
-
-    // Additional blending based on steepness
-    // vec3 snowColor = vec3(1.0);
-    // vec3 rockyColor = vec3(0.37, 0.22, 0.16);
-
-    // if(steepness > 0.5) {
-    //     weight = 0.0;
-    // } else {
-    //     weight = 1.0;
-    // }
 
     // Blend between grass and rocky color based on steepness
     // color = mix(rockyColor, snowColor, weight);
@@ -180,18 +162,21 @@ vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
 }
 
 void main() {
+    vec4 heightMapSample = texture(heightMap, texCoord);
+    vec3 normal = normalize(vec3(heightMapSample.y, 1.0, heightMapSample.z));
+
     float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * light.color;
 
-    vec3 norm = normalize(normal);
+    // vec3 norm = normalize(normal);
     vec3 lightDir = light.posOrDir.w == 0 ? normalize(-vec3(light.posOrDir)) : normalize(vec3(light.posOrDir) - fragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = diff * light.color;
 
     float specularStrength = 0.8;
     vec3 viewDist = viewPos - fragPos;
     vec3 viewDir = normalize(viewDist);
-    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 8);
     vec3 specular = specularStrength * spec * light.color;
 
@@ -204,8 +189,9 @@ void main() {
             light.quadratic * (distance * distance)); // Point light
     }
 
-    vec3 color = getColorFromHeightAndNormal(fragPos.y, norm);
-    float shadow = ShadowCalculation(fragPosLightSpace, norm, lightDir);
+    vec3 color = getColorFromHeightAndNormal(fragPos.y, normal);
+    float shadow = ShadowCalculation(fragPosLightSpace, normal, lightDir);
+    shadow = 0.0;
     vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * color * attenuation * light.intensity;
 
     // float fogDensity = 0.00000001;
@@ -215,7 +201,7 @@ void main() {
 
     // float fogStart = 1000.0;
     // float fogEnd = 4000.0;
-    float fogDensity = 0.0002;
+    float fogDensity = 0.0001;
     float fragDistance = length(viewDist);
     float fogFactor = 1.0 - exp(-fogDensity * fragDistance);
     fogFactor = clamp(fogFactor, 0.0, 1.0);
@@ -224,6 +210,9 @@ void main() {
     result = mix(result, vec3(191.0 / 255, 215.0 / 255, 227.0 / 255), fogFactor);
 
     FragColor = vec4(result, 1.0);
+    // FragColor = vec4(vec3(heightMapSample) / 500.0, 1.0);
+    // FragColor = vec4(norma.x, norma.y, norma.z, 1.0);
+
     // FragColor = vec4(vec3(shadow), 1.0);
     // FragColor = vec4(norm, 1.0);
 }

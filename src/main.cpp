@@ -141,11 +141,12 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glm::vec3 translations[10000];
+    const int numGrass = 500;
+    glm::vec3 translations[numGrass];
     // Generate random positions 10x10 area
     std::default_random_engine generator;
-    std::uniform_real_distribution<float> distribution(-20.0f, 20.0f);
-    for (unsigned int i = 0; i < 10000; i++) {
+    std::uniform_real_distribution<float> distribution(-200.0f, 200.0f);
+    for (unsigned int i = 0; i < numGrass; i++) {
         glm::vec3 translation;
         translation.x = distribution(generator);
         translation.z = distribution(generator);
@@ -156,7 +157,7 @@ int main() {
     unsigned int instanceVBO;
     glGenBuffers(1, &instanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 10000, &translations[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * numGrass, &translations[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
@@ -208,6 +209,7 @@ int main() {
 
         // RenderScene();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_FRAMEBUFFER_SRGB);
 
         // RENDER PASS
         // glCullFace(GL_BACK); // don't forget to reset original culling face
@@ -227,7 +229,7 @@ int main() {
         // camera.applyToShader(flatShader);
         // lightCube.render(flatShader);
 
-        // terrain.render(camera, light, depthMap, lightSpaceMatrix);
+        terrain.render(camera, light, depthMap, lightSpaceMatrix);
 
         glDisable(GL_CULL_FACE);
         grassShader.use();
@@ -237,19 +239,20 @@ int main() {
         grassShader.setInt("grassTex", 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, grassTexID);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, grassVertices.size() / 5, 10000);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, grassVertices.size() / 5, numGrass);
 
         glEnable(GL_CULL_FACE);
 
         skybox.render(camera);
 
+        // glDisable(GL_FRAMEBUFFER_SRGB);
         glfwSwapBuffers(window);
         glfwPollEvents();
 
         double currentTime = glfwGetTime();
         dt = currentTime - lastTime;
         lastTime = currentTime;
-        std::cout << "Delta: " << dt * 1000 << std::endl;
+        // std::cout << "Delta: " << dt * 1000 << std::endl;
     }
 
     glfwTerminate();
