@@ -8,6 +8,7 @@ class Vertex;
 class Camera;
 class Light;
 class Shader;
+class GrassRenderer;
 
 class Chunk {
   private:
@@ -30,7 +31,7 @@ class Chunk {
     Chunk(int chunkX, int chunkZ);
     ~Chunk();
 
-    void generate(Shader &terrainGenCompute, Shader &terrainNormalCompute);
+    void generate(Shader &terrainGenCompute, Shader &terrainNormalCompute, GrassRenderer &grass);
 
     void render(Shader &shader);
 

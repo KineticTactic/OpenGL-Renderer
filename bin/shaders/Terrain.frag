@@ -23,6 +23,7 @@ uniform vec3 viewPos;
 uniform sampler2D shadowMap;
 uniform sampler2D rockTex;
 uniform sampler2D snowTex;
+uniform sampler2D grassFieldTex;
 uniform sampler2D heightMap;
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir) {
@@ -135,7 +136,8 @@ vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
         color = vec3(0.0, 0.0, 0.5);
     } else if(normalizedHeight < 2.5) {
         // plains color
-        color = vec3(0.39, 0.61, 0.2);
+        // color = vec3(0.39, 0.61, 0.2);
+        color = textureNoTile(grassFieldTex, vec2(fragPos.x, fragPos.z) / 5.0).rgb;
     } else if(normalizedHeight < 3.5) {
         // rocky color
         color = vec3(0.37, 0.22, 0.16);

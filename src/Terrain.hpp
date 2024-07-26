@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "Shader.hpp"
+#include "GrassRenderer.hpp"
 
 class Vertex;
 class Camera;
@@ -19,8 +20,11 @@ class Terrain {
 
     unsigned int rockTex;
     unsigned int snowTex;
+    unsigned int grassFieldTex;
 
     std::vector<Chunk *> chunks;
+
+    GrassRenderer grass;
 
   public:
     Terrain();

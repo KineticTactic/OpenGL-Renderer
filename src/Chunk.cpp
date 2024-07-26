@@ -1,12 +1,14 @@
 #include "Chunk.hpp"
 
+#include <GLFW/glfw3.h>
 #include <FastNoise/FastNoiseLite.h>
 #include <glad/gl.h>
 #include <iostream>
-#include <GLFW/glfw3.h>
+#include <random>
 
 #include "Vertex.hpp"
 #include "Shader.hpp"
+#include "GrassRenderer.hpp"
 
 Chunk::Chunk(int chunkX, int chunkZ)
     : worldPos({chunkX * Chunk::chunkSize, 0.0f, chunkZ * Chunk::chunkSize}) {
@@ -88,8 +90,10 @@ void Chunk::deleteBuffers() {
     glDeleteBuffers(1, &Chunk::vbo);
 }
 
-void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute) {
-    double start = glfwGetTime();
+void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute,
+                     GrassRenderer &grass) {
+    GLuint queryId[2];
+    glBeginQuery(GL_TIME_ELAPSED, queryId[0]);
 
     glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
@@ -100,6 +104,10 @@ void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute) {
     glDispatchCompute(heightMapRes, heightMapRes, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+    GLuint64 time;
+    glEndQuery(GL_TIME_ELAPSED);
+    glGetQueryObjectui64v(queryId[0], GL_QUERY_RESULT, &time);
+
     glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     terrainNormalCompute.use();
     terrainNormalCompute.setFloat("chunkSize", Chunk::chunkSize);
@@ -107,19 +115,35 @@ void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute) {
     glDispatchCompute(heightMapRes, heightMapRes, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    // std::vector<float> data(heightMapRes * heightMapRes);
-    // glBindTexture(GL_TEXTURE_2D, this->heightMapID); // Make sure to bind the texture before
-    // glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data.data());
+    std::cout << "[CHUNK]: Chunk generated in " << time / 1000000 << "ms" << std::endl;
 
-    // //// Debug: print out some values to check if the texture was updated
-    // for (int i = 0; i < 10; ++i) {
-    //     std::cout << data[i] << std::endl;
-    // }
+    glBeginQuery(GL_TIME_ELAPSED, queryId[0]);
+
+    std::vector<float> data(heightMapRes * heightMapRes);
+    glBindTexture(GL_TEXTURE_2D, this->heightMapID); // Make sure to bind the texture before
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data.data());
+
+    glEndQuery(GL_TIME_ELAPSED);
+    glGetQueryObjectui64v(queryId[0], GL_QUERY_RESULT, &time);
+
+    std::cout << "[CHUNK]: Data fetched in " << time / 1000000 << "ms" << std::endl;
+
+    std::default_random_engine generator;
+    std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
+
+    for (int i = 0; i < heightMapRes; i++) {
+        for (int j = 0; j < heightMapRes; j++) {
+            int index = i * heightMapRes + j;
+
+            if (distribution(generator) < 0.001) {
+                float height = data[index];
+                grass.addGrass({worldPos.x + (j / (float)heightMapRes) * Chunk::chunkSize, height,
+                                worldPos.z + (i / (float)heightMapRes) * Chunk::chunkSize});
+            }
+        }
+    }
 
     this->generated = true;
-
-    double time = glfwGetTime() - start;
-    std::cout << "[CHUNK]: Chunk generated: " << time * 1000 << "ms" << std::endl;
 }
 
 void Chunk::render(Shader &shader) {

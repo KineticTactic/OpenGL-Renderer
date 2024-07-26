@@ -50,23 +50,6 @@ std::vector<float> planeVertices = {-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
                                     -0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,  //
                                     0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f}; //
 
-// positions and texcoords
-std::vector<float> grassVertices = {
-    -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, //
-    1.0f, -1.0f, -1.0f, 1.0f, 0.0f, //
-    1.0f, 1.0f, -1.0f, 1.0f, 1.0f,  //
-    -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, //
-    1.0f, 1.0f, -1.0f, 1.0f, 1.0f,  //
-    -1.0f, 1.0f, 1.0f, 0.0f, 1.0f,  //
-    //
-    -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, //
-    1.0f, -1.0f, 1.0f, 1.0f, 0.0f,   //
-    1.0f, 1.0f, 1.0f, 1.0f, 1.0f,    //
-    -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, //
-    1.0f, 1.0f, 1.0f, 1.0f, 1.0f,    //
-    -1.0f, 1.0f, -1.0f, 0.0f, 1.0f   //
-}; //
-
 int main() {
     GLFWwindow *window = Context::createWindow();
     Context::initOpenGL();
@@ -125,50 +108,21 @@ int main() {
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    unsigned int grassTexID =
-        SOIL_load_OGL_texture("./assets/textures/grass2.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-                              SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-                                  SOIL_FLAG_COMPRESS_TO_DXT);
-    unsigned int grassVAO, grassVBO;
-    glGenVertexArrays(1, &grassVAO);
-    glBindVertexArray(grassVAO);
-    glGenBuffers(1, &grassVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
-    glBufferData(GL_ARRAY_BUFFER, grassVertices.size() * sizeof(float), grassVertices.data(),
-                 GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    // const int numGrass = 500;
+    // glm::vec3 translations[numGrass];
+    // // Generate random positions 10x10 area
+    // std::default_random_engine generator;
+    // std::uniform_real_distribution<float> distribution(-200.0f, 200.0f);
+    // for (unsigned int i = 0; i < numGrass; i++) {
+    //     glm::vec3 translation;
+    //     translation.x = distribution(generator);
+    //     translation.z = distribution(generator);
+    //     translation.y = 0.0f;
+    //     translations[i] = translation;
+    // }
 
-    const int numGrass = 500;
-    glm::vec3 translations[numGrass];
-    // Generate random positions 10x10 area
-    std::default_random_engine generator;
-    std::uniform_real_distribution<float> distribution(-200.0f, 200.0f);
-    for (unsigned int i = 0; i < numGrass; i++) {
-        glm::vec3 translation;
-        translation.x = distribution(generator);
-        translation.z = distribution(generator);
-        translation.y = 0.0f;
-        translations[i] = translation;
-    }
-
-    unsigned int instanceVBO;
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * numGrass, &translations[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glVertexAttribDivisor(2, 1);
-    glBindVertexArray(0);
-
-    Shader grassShader("shaders/Grass.vert", "shaders/Grass.frag");
-    grassShader.use();
+    // Shader grassShader("shaders/Grass.vert", "shaders/Grass.frag");
+    // grassShader.use();
 
     double lastTime = glfwGetTime();
     double dt = 0.0;
@@ -230,18 +184,6 @@ int main() {
         // lightCube.render(flatShader);
 
         terrain.render(camera, light, depthMap, lightSpaceMatrix);
-
-        glDisable(GL_CULL_FACE);
-        grassShader.use();
-        camera.applyToShader(grassShader);
-        grassShader.setMat4("model", glm::mat4(1.0f));
-        glBindVertexArray(grassVAO);
-        grassShader.setInt("grassTex", 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, grassTexID);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, grassVertices.size() / 5, numGrass);
-
-        glEnable(GL_CULL_FACE);
 
         skybox.render(camera);
 

@@ -46,7 +46,7 @@ Terrain::Terrain()
       terrainNormalCompute("shaders/TerrainNormal.comp"),
       depthShader("shaders/terrain.vert", "shaders/TerrainDepth.tesc", "shaders/TerrainDepth.tese",
                   "shaders/TerrainDepth.frag") {
-    std::vector<IntCoords> coords = Spiral(20, 20);
+    std::vector<IntCoords> coords = Spiral(5, 5);
     for (auto &coord : coords) {
         this->chunks.push_back(new Chunk(coord.x, coord.y));
     }
@@ -61,6 +61,11 @@ Terrain::Terrain()
         SOIL_load_OGL_texture("./assets/textures/rock_2k.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
                               SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
                                   SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_TEXTURE_REPEATS);
+
+    this->grassFieldTex = SOIL_load_OGL_texture(
+        "./assets/textures/grassfield1.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
+            SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_TEXTURE_REPEATS);
     // this->snowTex =
     //     SOIL_load_OGL_texture("./assets/textures/snow_4k.jpg", SOIL_LOAD_AUTO,
     //     SOIL_CREATE_NEW_ID,
@@ -81,7 +86,7 @@ void Terrain::update(Camera &camera) {
     int generated = 0;
     for (auto &chunk : this->chunks) {
         if (!chunk->isGenerated()) {
-            chunk->generate(this->terrainGenCompute, this->terrainNormalCompute);
+            chunk->generate(this->terrainGenCompute, this->terrainNormalCompute, this->grass);
             generated++;
         }
         if (generated >= numPerFrame) {
@@ -100,6 +105,7 @@ void Terrain::render(Camera &camera, Light &light, unsigned int depthMap,
 
     shader.setInt("shadowMap", 1);
     shader.setInt("rockTex", 2);
+    shader.setInt("grassFieldTex", 3);
     // shader.setInt("snowTex", 3);
 
     glActiveTexture(GL_TEXTURE1);
@@ -108,12 +114,17 @@ void Terrain::render(Camera &camera, Light &light, unsigned int depthMap,
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->rockTex);
 
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, this->grassFieldTex);
+
     // glActiveTexture(GL_TEXTURE3);
     // glBindTexture(GL_TEXTURE_2D, this->snowTex);
 
     for (auto &chunk : this->chunks) {
         chunk->render(this->shader);
     }
+
+    this->grass.render(camera);
 }
 
 void Terrain::renderDepthPass(glm::mat4 &lightSpaceMatrix) {

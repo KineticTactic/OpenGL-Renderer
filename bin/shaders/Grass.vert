@@ -16,9 +16,10 @@ float rand(vec2 co) {
 }
 
 void main() {
-	float scale = rand(vec2(gl_InstanceID, gl_InstanceID)) * 1 + 2.0;
+	// float scale = rand(vec2(gl_InstanceID, gl_InstanceID)) * 1 + 2.0;
 
-	gl_Position = viewProjection * model * vec4(aPos * scale + aOffset + vec3(0, scale / 2, 0), 1.0);
+	gl_Position = viewProjection * model * vec4(aPos + aOffset, 1.0);
+	// gl_Position = viewProjection * model * vec4(aPos * scale + aOffset + vec3(0, scale / 2, 0), 1.0);
 	// gl_Position = vec4(aPos, 1.0);
 
 	// normal = mat3(transpose(inverse(model))) * aNormal;

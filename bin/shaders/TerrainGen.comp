@@ -1,4 +1,5 @@
 #version 460 core
+precision highp float;
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
@@ -98,7 +99,7 @@ float octaveNoise(vec2 v, int octaves, float freq, float gain) {
 
 	for(int i = 0; i < octaves; i++) {
 		// vec3 noise = cubicNoise(vec3(v, 0.0) * frequency);
-		float noise = snoise(v * frequency);
+		float noise = snoise(v * frequency + vec2(50000.0, 10000.0));
 
 		// grad += noise.yz * amplitude;
 		// float m = length(grad);
