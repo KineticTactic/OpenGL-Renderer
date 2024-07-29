@@ -128,9 +128,9 @@ vec3 getColorFromHeightAndNormal(float height, vec3 normal) {
 
     // Normalize height to the range [0, 1]
     float normalizedHeight = height / 256.0;
+    // float normalizedHeight = height / 5.0;
     float steepness = exp(-0.8 * normal.y);
 
-    float weight = 0.0;
     if(normalizedHeight < 0.5) {
         // water color
         color = vec3(0.0, 0.0, 0.5);
@@ -193,7 +193,6 @@ void main() {
 
     vec3 color = getColorFromHeightAndNormal(fragPos.y, normal);
     float shadow = ShadowCalculation(fragPosLightSpace, normal, lightDir);
-    shadow = 0.0;
     vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * color * attenuation * light.intensity;
 
     // float fogDensity = 0.00000001;

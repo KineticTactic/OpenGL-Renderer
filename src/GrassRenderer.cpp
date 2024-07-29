@@ -61,9 +61,10 @@ void GrassRenderer::addGrass(glm::vec3 pos) {
 }
 
 void GrassRenderer::render(Camera &camera) {
+    return;
     glDisable(GL_CULL_FACE);
 
-    std::cout << "Grass: " << grassPositions.size() << std::endl;
+    // std::cout << "Grass: " << grassPositions.size() << std::endl;
 
     // for (auto &pos : grassPositions) {
     //     std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;

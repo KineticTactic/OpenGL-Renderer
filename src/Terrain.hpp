@@ -10,6 +10,7 @@ class Vertex;
 class Camera;
 class Light;
 class Chunk;
+class QuadNode;
 
 class Terrain {
   private:
@@ -22,9 +23,13 @@ class Terrain {
     unsigned int snowTex;
     unsigned int grassFieldTex;
 
+    std::vector<QuadNode> nodes;
     std::vector<Chunk *> chunks;
 
     GrassRenderer grass;
+
+    inline static float MIN_CHUNK_SIZE = 255.0f;
+    inline static float TERRAIN_SIZE = 100000.0f;
 
   public:
     Terrain();
@@ -36,5 +41,10 @@ class Terrain {
 
     inline Shader &getShader() {
         return this->shader;
+    }
+
+    /// TODO: remove
+    inline std::vector<QuadNode> getNodes() {
+        return this->nodes;
     }
 };

@@ -50,3 +50,8 @@ class Renderable {
   private:
     void updateModelMatrix();
 };
+
+namespace Primitives {
+extern std::vector<float> cubeVertices;
+extern std::vector<float> planeVertices;
+} 

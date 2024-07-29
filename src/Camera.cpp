@@ -19,6 +19,6 @@ void Camera::setAspectRatio(float aspectRatio) {
 }
 
 void Camera::updateProjectionMatrix() {
-    this->projectionMatrix = glm::perspective(glm::radians(45.0f), this->aspect, 0.1f, 10000.0f);
+    this->projectionMatrix = glm::perspective(glm::radians(45.0f), this->aspect, 1.f, 60000.0f);
     this->viewProjectionMatrix = this->projectionMatrix * this->viewMatrix;
 }

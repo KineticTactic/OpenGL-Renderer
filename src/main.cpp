@@ -17,38 +17,7 @@
 #include "Terrain.hpp"
 #include "Skybox.hpp"
 #include "Debug.hpp"
-
-std::vector<float> cubeVertices = {
-    -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.5f,  -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f,
-    0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, 0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f,
-    -0.5f, 0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f,
-
-    -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,
-    0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-    -0.5f, 0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  -0.5f, -0.5f, 0.5f,  0.0f,  0.0f,  1.0f,
-
-    -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,  -0.5f, 0.5f,  -0.5f, -1.0f, 0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,  -0.5f, -0.5f, -0.5f, -1.0f, 0.0f,  0.0f,
-    -0.5f, -0.5f, 0.5f,  -1.0f, 0.0f,  0.0f,  -0.5f, 0.5f,  0.5f,  -1.0f, 0.0f,  0.0f,
-
-    0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.5f,  -0.5f, 1.0f,  0.0f,  0.0f,
-    0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,  0.5f,  -0.5f, -0.5f, 1.0f,  0.0f,  0.0f,
-    0.5f,  -0.5f, 0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-    -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,  0.5f,  -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,
-    0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  0.5f,  -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f,  0.0f,  -1.0f, 0.0f,  -0.5f, -0.5f, -0.5f, 0.0f,  -1.0f, 0.0f,
-
-    -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.5f,  0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,
-    0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f};
-
-std::vector<float> planeVertices = {-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
-                                    -0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,  //
-                                    0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
-                                    0.5f,  0.0f, -0.5f, 0.0f, 1.0f, 0.0f,  //
-                                    -0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,  //
-                                    0.5f,  0.0f, 0.5f,  0.0f, 1.0f, 0.0f}; //
+#include "QuadTree.hpp"
 
 int main() {
     GLFWwindow *window = Context::createWindow();
@@ -56,32 +25,25 @@ int main() {
     Debug::init();
 
     FlyCamera camera(glm::vec3(0.0f, 1.0f, -5.0f));
-
     Context::setCamera(window, camera);
     Input::init(window, &camera);
 
     Shader phongShader("shaders/Phong.vert", "shaders/Phong.frag");
-    Shader flatShader("shaders/Flat.vert", "shaders/Flat.frag");
-
-    Light light(glm::vec3(1.0f, 1.0f, 1.0f));
-    // light.setPosition(glm::vec3(1.2f, 25.0f, 2.0f));
-    light.setDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
-    light.setIntensity(0.7f);
-
-    // camera.orbit(glm::vec2(0.0f, 50.0f));
-
-    Renderable cube(Loader::loadOBJ("./assets/monkey.obj"));
-    cube.setScale(glm::vec3(1.0f));
-    cube.setPosition(glm::vec3(0.0f, 1000.0f, 0.0f));
-    Renderable lightCube(cubeVertices);
-    lightCube.setScale(glm::vec3(0.2f));
-    Renderable plane(planeVertices);
-    // plane.setPosition(glm::vec3(0.0f, 256.0f, 0.0f));
-    plane.setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-    plane.setScale(glm::vec3(10.0f));
 
     Skybox::initShader();
     Skybox skybox("./assets/skybox/compressed/");
+
+    Light light(glm::vec3(1.0f, 1.0f, 1.0f));
+    light.setDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
+    light.setIntensity(0.7f);
+
+    Renderable monke(Loader::loadOBJ("./assets/monkey.obj"));
+    monke.setScale(glm::vec3(1.0f));
+    monke.setPosition(glm::vec3(0.0f, 1000.0f, 0.0f));
+
+    Renderable plane(Primitives::planeVertices);
+    plane.setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+    plane.setScale(glm::vec3(10.0f));
 
     Terrain terrain;
 
@@ -108,49 +70,23 @@ int main() {
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // const int numGrass = 500;
-    // glm::vec3 translations[numGrass];
-    // // Generate random positions 10x10 area
-    // std::default_random_engine generator;
-    // std::uniform_real_distribution<float> distribution(-200.0f, 200.0f);
-    // for (unsigned int i = 0; i < numGrass; i++) {
-    //     glm::vec3 translation;
-    //     translation.x = distribution(generator);
-    //     translation.z = distribution(generator);
-    //     translation.y = 0.0f;
-    //     translations[i] = translation;
-    // }
-
     // Shader grassShader("shaders/Grass.vert", "shaders/Grass.frag");
     // grassShader.use();
 
     double lastTime = glfwGetTime();
     double dt = 0.0;
     while (!glfwWindowShouldClose(window)) {
-        // glClearColor(0.568f, 0.67f, 0.72f, 1.0f);
-
         Input::processInput(dt);
         terrain.update(camera);
 
         if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_E) == GLFW_PRESS) {
-            cube.setPosition(camera.getPosition());
+            monke.setPosition(camera.getPosition());
         }
-
-        // camera.orbit(glm::vec2(1.0f, 0.0f));
-
-        // glm::vec3 lightPos = glm::vec3(sin(glfwGetTime() * 2) * 4,
-        //                                3 * cos(glfwGetTime() * 1) * sin(glfwGetTime() * 1.5)
-        //                                + 3, cos(glfwGetTime() * 2) * 4);
-        // light.setPosition(lightPos);
-        // lightCube.setPosition(lightPos);
-        // glm::vec3 lightDir = glm::vec3(sin(glfwGetTime() * 2), -1.0f, cos(glfwGetTime() *
-        // 2)); light.setDirection(lightDir);
 
         // DEPTH PASS
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        // // glCullFace(GL_FRONT);
 
         float near_plane = 0.1f, far_plane = 7500.f;
         glm::mat4 lightProjection =
@@ -161,12 +97,10 @@ int main() {
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
         terrain.renderDepthPass(lightSpaceMatrix);
 
-        // RenderScene();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_FRAMEBUFFER_SRGB);
 
         // RENDER PASS
-        // glCullFace(GL_BACK); // don't forget to reset original culling face
         glViewport(0, 0, Context::getFramebufferSize().x, Context::getFramebufferSize().y);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -174,20 +108,14 @@ int main() {
         camera.applyToShader(phongShader);
         light.applyToShader(phongShader);
         phongShader.setVec3("objectColor", glm::vec3(0.87f, 0.43f, 0.98f));
-        cube.render(phongShader);
+        monke.render(phongShader);
         phongShader.setVec3("objectColor", glm::vec3(0.2f, 0.3f, 0.9f));
         plane.render(phongShader);
-
-        // flatShader.use();
-        // flatShader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        // camera.applyToShader(flatShader);
-        // lightCube.render(flatShader);
 
         terrain.render(camera, light, depthMap, lightSpaceMatrix);
 
         skybox.render(camera);
 
-        // glDisable(GL_FRAMEBUFFER_SRGB);
         glfwSwapBuffers(window);
         glfwPollEvents();
 

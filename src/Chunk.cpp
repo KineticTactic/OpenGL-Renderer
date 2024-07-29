@@ -10,9 +10,7 @@
 #include "Shader.hpp"
 #include "GrassRenderer.hpp"
 
-Chunk::Chunk(int chunkX, int chunkZ)
-    : worldPos({chunkX * Chunk::chunkSize, 0.0f, chunkZ * Chunk::chunkSize}) {
-
+Chunk::Chunk(glm::vec3 worldPos, float chunkSize) : worldPos(worldPos), chunkSize(chunkSize) {
     glGenTextures(1, &this->heightMapID);
     glBindTexture(GL_TEXTURE_2D, this->heightMapID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -37,10 +35,10 @@ std::vector<float> generateSplitQuads(float chunkSize, int numSubdivisions, floa
 
     for (int i = 0; i < numSubdivisions; ++i) {
         for (int j = 0; j < numSubdivisions; ++j) {
-            float x0 = i * step;
-            float x1 = (i + 1) * step;
-            float z0 = j * step;
-            float z1 = (j + 1) * step;
+            float x0 = i * step - chunkSize / 2;
+            float x1 = (i + 1) * step - chunkSize / 2;
+            float z0 = j * step - chunkSize / 2;
+            float z1 = (j + 1) * step - chunkSize / 2;
 
             float s0 = 1 * pix + i * texStep;
             float s1 = 1 * pix + (i + 1) * texStep;
@@ -70,7 +68,7 @@ void Chunk::generateBuffers() {
     // Vertex layout: vec3 pos, vec2 tex
     float pix = (1.f / heightMapRes) / 2;
 
-    std::vector<float> vertexData = generateSplitQuads(Chunk::chunkSize, Chunk::subdivisions, pix);
+    std::vector<float> vertexData = generateSplitQuads(1.0f, Chunk::subdivisions, pix);
 
     glGenBuffers(1, &Chunk::vbo);
     glBindBuffer(GL_ARRAY_BUFFER, Chunk::vbo);
@@ -92,56 +90,59 @@ void Chunk::deleteBuffers() {
 
 void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute,
                      GrassRenderer &grass) {
-    GLuint queryId[2];
-    glBeginQuery(GL_TIME_ELAPSED, queryId[0]);
+    // GLuint queryId[2];
+    GLuint query;
+    glGenQueries(1, &query);
+    glBeginQuery(GL_TIME_ELAPSED, query);
 
     glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
     terrainGenCompute.use();
     terrainGenCompute.setVec3("worldPos", this->worldPos);
     terrainGenCompute.setInt("heightMapRes", heightMapRes);
-    terrainGenCompute.setFloat("chunkSize", Chunk::chunkSize);
+    terrainGenCompute.setFloat("chunkSize", chunkSize);
     glDispatchCompute(heightMapRes, heightMapRes, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     GLuint64 time;
     glEndQuery(GL_TIME_ELAPSED);
-    glGetQueryObjectui64v(queryId[0], GL_QUERY_RESULT, &time);
+    glGetQueryObjectui64v(query, GL_QUERY_RESULT, &time);
 
     glBindImageTexture(0, this->heightMapID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     terrainNormalCompute.use();
-    terrainNormalCompute.setFloat("chunkSize", Chunk::chunkSize);
+    terrainNormalCompute.setFloat("chunkSize", chunkSize);
     terrainNormalCompute.setInt("heightMapRes", heightMapRes);
     glDispatchCompute(heightMapRes, heightMapRes, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     std::cout << "[CHUNK]: Chunk generated in " << time / 1000000 << "ms" << std::endl;
 
-    glBeginQuery(GL_TIME_ELAPSED, queryId[0]);
+    glBeginQuery(GL_TIME_ELAPSED, query);
 
     std::vector<float> data(heightMapRes * heightMapRes);
     glBindTexture(GL_TEXTURE_2D, this->heightMapID); // Make sure to bind the texture before
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, data.data());
 
     glEndQuery(GL_TIME_ELAPSED);
-    glGetQueryObjectui64v(queryId[0], GL_QUERY_RESULT, &time);
+    glGetQueryObjectui64v(query, GL_QUERY_RESULT, &time);
 
     std::cout << "[CHUNK]: Data fetched in " << time / 1000000 << "ms" << std::endl;
 
-    std::default_random_engine generator;
-    std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
+    // std::default_random_engine generator;
+    // std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
 
-    for (int i = 0; i < heightMapRes; i++) {
-        for (int j = 0; j < heightMapRes; j++) {
-            int index = i * heightMapRes + j;
+    // for (int i = 0; i < heightMapRes; i++) {
+    //     for (int j = 0; j < heightMapRes; j++) {
+    //         int index = i * heightMapRes + j;
 
-            if (distribution(generator) < 0.001) {
-                float height = data[index];
-                grass.addGrass({worldPos.x + (j / (float)heightMapRes) * Chunk::chunkSize, height,
-                                worldPos.z + (i / (float)heightMapRes) * Chunk::chunkSize});
-            }
-        }
-    }
+    //         if (distribution(generator) < 0.001) {
+    //             float height = data[index];
+    //             grass.addGrass({worldPos.x + (j / (float)heightMapRes) * Chunk::chunkSize,
+    //             height,
+    //                             worldPos.z + (i / (float)heightMapRes) * Chunk::chunkSize});
+    //         }
+    //     }
+    // }
 
     this->generated = true;
 }
@@ -152,6 +153,7 @@ void Chunk::render(Shader &shader) {
 
     shader.setVec3("worldPos", this->worldPos);
     shader.setInt("heightMap", 0);
+    shader.setFloat("chunkSize", chunkSize);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->heightMapID);

@@ -11,12 +11,15 @@ class Shader;
 class GrassRenderer;
 
 class Chunk {
+    friend class Terrain;
+
   private:
     std::vector<float> heightMap;
 
     unsigned int heightMapID;
 
     glm::vec3 worldPos;
+    float chunkSize;
 
     bool generated = false;
 
@@ -24,11 +27,10 @@ class Chunk {
     inline static GLuint vbo = 0;
 
   public:
-    inline static float chunkSize = 255.f;
     inline static int subdivisions = 8;
     inline static int heightMapRes = 256;
 
-    Chunk(int chunkX, int chunkZ);
+    Chunk(glm::vec3 worldPos, float chunkSize);
     ~Chunk();
 
     void generate(Shader &terrainGenCompute, Shader &terrainNormalCompute, GrassRenderer &grass);

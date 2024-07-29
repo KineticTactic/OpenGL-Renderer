@@ -99,7 +99,7 @@ float octaveNoise(vec2 v, int octaves, float freq, float gain) {
 
 	for(int i = 0; i < octaves; i++) {
 		// vec3 noise = cubicNoise(vec3(v, 0.0) * frequency);
-		float noise = snoise(v * frequency + vec2(50000.0, 10000.0));
+		float noise = snoise(v * frequency);
 
 		// grad += noise.yz * amplitude;
 		// float m = length(grad);
@@ -110,7 +110,6 @@ float octaveNoise(vec2 v, int octaves, float freq, float gain) {
 		amplitude *= gain;
 		frequency *= 2.0;
 	}
-
 	return value / maxVal;
 }
 
@@ -118,7 +117,7 @@ float heightFunc(vec2 v) {
 	float altitude = octaveNoise(v, 6, 0.0002, 0.3).x;
 	altitude = pow(altitude, 1) * 4;
 
-	float plainHeight = altitude + octaveNoise(v, 6, 0.0002, 0.5) + octaveNoise(v + vec2(1000000, 100000), 6, 0.0005, 0.5) * 1;
+	float plainHeight = altitude + octaveNoise(v, 6, 0.0002, 0.5) + octaveNoise(v, 6, 0.0005, 0.5) * 1;
 	float hillHeight = altitude + octaveNoise(v, 10, 0.001, 0.3) * 1.5;
 	float mountainHeight = altitude + octaveNoise(v, 10, 0.002, 0.3) * 2 + octaveNoise(v, 10, 0.01, 0.5) * 0.1 + octaveRidgeNoise(v, 4, 0.005, 0.5) * 0.1;
 
@@ -142,9 +141,11 @@ float heightFunc(vec2 v) {
 
 void main() {
 	ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
-	vec2 pixelWorldPos = vec2(pixel) / (heightMapRes - 1) * chunkSize + worldPos.xz;
+	vec2 pixelWorldPos = vec2(pixel) / (heightMapRes - 1) * chunkSize + worldPos.xz - chunkSize / 2.0;
 
 	float height = heightFunc(pixelWorldPos);
+	// float height = sin(pixelWorldPos.x / 10 + pixelWorldPos.y / 10) + cos(pixelWorldPos.x / 10 - pixelWorldPos.y / 10);
+	// height *= 10;
 
 	vec3 normal = vec3(0.0, 1.0, 0.0);
 
