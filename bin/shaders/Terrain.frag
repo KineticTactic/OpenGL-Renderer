@@ -202,7 +202,7 @@ void main() {
 
     // float fogStart = 1000.0;
     // float fogEnd = 4000.0;
-    float fogDensity = 0.0001;
+    float fogDensity = 0.00015;
     float fragDistance = length(viewDist);
     float fogFactor = 1.0 - exp(-fogDensity * fragDistance);
     fogFactor = clamp(fogFactor, 0.0, 1.0);

@@ -150,6 +150,8 @@ glm::vec2 Context::getFramebufferSize() {
 }
 
 void Context::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
+    if (width == 0 || height == 0)
+        return;
     glViewport(0, 0, width, height);
     std::cout << "Resized to " << width << "x" << height << std::endl;
     Camera *camera = (Camera *)glfwGetWindowUserPointer(window);

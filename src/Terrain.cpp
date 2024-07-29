@@ -57,6 +57,9 @@ Terrain::Terrain()
     this->shader.use();
     this->shader.setInt("heightMapRes", Chunk::heightMapRes - 2);
 
+    std::function<void()> onReload = std::bind(&Terrain::clearTerrain, this);
+    this->terrainGenCompute.onReload(onReload);
+
     this->rockTex =
         SOIL_load_OGL_texture("./assets/textures/rock_2k.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
                               SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
@@ -186,4 +189,12 @@ void Terrain::renderDepthPass(glm::mat4 &lightSpaceMatrix) {
     for (auto &chunk : this->chunks) {
         chunk->render(this->depthShader);
     }
+}
+
+void Terrain::clearTerrain() {
+    for (auto &chunk : this->chunks) {
+        delete chunk;
+    }
+    this->chunks.clear();
+    this->nodes.clear();
 }

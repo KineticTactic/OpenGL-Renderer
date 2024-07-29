@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "FlyCamera.hpp"
+#include "Shader.hpp"
 
 void Input::init(GLFWwindow *window, FlyCamera *camera) {
     glfwSetCursorPosCallback(window, Input::mouseMoveCallback);
@@ -68,5 +69,9 @@ void Input::keyCallback(GLFWwindow *window, int key, int scancode, int action, i
     if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
         isWireframe = !isWireframe;
         glPolygonMode(GL_FRONT_AND_BACK, isWireframe ? GL_LINE : GL_FILL);
+    }
+
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        Shader::reloadAll();
     }
 }

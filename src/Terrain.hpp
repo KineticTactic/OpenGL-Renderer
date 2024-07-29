@@ -39,6 +39,8 @@ class Terrain {
     void render(Camera &camera, Light &light, unsigned int depthMap, glm::mat4 &lightSpaceMatrix);
     void renderDepthPass(glm::mat4 &lightSpaceMatrix);
 
+    void clearTerrain();
+
     inline Shader &getShader() {
         return this->shader;
     }
