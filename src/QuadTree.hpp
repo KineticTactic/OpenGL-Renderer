@@ -7,8 +7,6 @@ struct QuadNode {
     glm::vec2 worldPos;
     float size;
     bool isLeafNode = false;
-    // TODO: Use smth else other than string
-    // std::string id;
 };
 
 class QuadTree {

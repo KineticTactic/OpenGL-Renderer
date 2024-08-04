@@ -5,6 +5,9 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <regex>
+
+#include "Log.hpp"
 
 Shader::Shader(const char *vertexPath, const char *fragmentPath) {
     this->srcFiles[GL_VERTEX_SHADER] = std::string(vertexPath);
@@ -62,7 +65,6 @@ void Shader::setVec4(const std::string &name, glm::vec4 const &vector) {
 
 void Shader::reloadIfModified() {
     for (auto it = this->srcFiles.begin(); it != this->srcFiles.end(); ++it) {
-        unsigned int type = it->first;
         std::string path = it->second;
 
         std::filesystem::file_time_type lastModified = std::filesystem::last_write_time(path);
@@ -126,6 +128,17 @@ void Shader::buildShaderProgram() {
 
 unsigned int Shader::compileShader(const char *path, unsigned int type) {
     std::string source = readFile(path);
+    std::regex includeRegex("#include\\s+\"([^\"]+)\"");
+    std::smatch match;
+
+    while (std::regex_search(source, match, includeRegex)) {
+        std::string includeStatement = match.str(0);
+        std::string includedFile = "shaders/" + match.str(1);
+
+        std::string includedFileContents = readFile(includedFile.c_str());
+        source.replace(match.position(0), match.length(0), includedFileContents);
+    }
+
     const char *sourceC = source.c_str();
 
     unsigned int shader = glCreateShader(type);
@@ -139,10 +152,10 @@ unsigned int Shader::compileShader(const char *path, unsigned int type) {
 
     if (!success) {
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::COMPILATION_FAILED: " << path << "\n" << infoLog << std::endl;
+        LOG_ERROR("[SHADER]: Failed to compile shader {}\n{}", path, infoLog);
         assert(false);
     } else {
-        std::cout << "[SHADER]: Shader compiled successfully (" << path << ")\n";
+        LOG_TRACE("[SHADER]: Shader compiled successfully ({})", path);
     }
 
     return shader;
@@ -162,10 +175,10 @@ unsigned int Shader::linkProgram(std::vector<unsigned int> shaders) {
 
     if (!success) {
         glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        LOG_ERROR("[SHADER]: Failed to link shader program!\n{}", infoLog);
         assert(false);
     } else {
-        std::cout << "[SHADER]: Shader program linked successfully\n";
+        LOG_TRACE("[SHADER]: Shader program linked successfully");
     }
 
     return program;
@@ -176,7 +189,7 @@ std::string Shader::readFile(const char *filePath) {
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fileStream.open(filePath);
     if (!fileStream.is_open()) {
-        std::cerr << "Could not read file " << filePath << ". File does not exist." << std::endl;
+        LOG_ERROR("[SHADER]: Could not read file {}. File does not exist.", filePath);
         return "";
     }
 

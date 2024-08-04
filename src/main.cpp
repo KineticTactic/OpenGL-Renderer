@@ -6,6 +6,7 @@
 #include <SOIL2/SOIL2.h>
 #include <random>
 
+#include "Log.hpp"
 #include "Context.hpp"
 #include "Shader.hpp"
 #include "OrbitCamera.hpp"
@@ -20,6 +21,8 @@
 #include "QuadTree.hpp"
 
 int main() {
+    Log::init();
+
     GLFWwindow *window = Context::createWindow();
     Context::initOpenGL();
     Debug::init();

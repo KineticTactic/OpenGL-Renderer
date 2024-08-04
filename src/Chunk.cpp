@@ -52,11 +52,8 @@ std::vector<float> generateSplitQuads(float chunkSize, int numSubdivisions, floa
                                                     x1, 0, z0, s1, t0, // Bottom-right
                                                     x1, 0, z1, s1, t1  // Top-right
                                                 });
-            std::cout << "s0: " << s0 << " t0: " << t0 << " s1: " << s1 << " t1: " << t1
-                      << std::endl;
         }
     }
-    std::cout << "Done" << std::endl;
 
     return vertexData;
 }

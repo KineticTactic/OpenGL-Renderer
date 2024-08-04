@@ -2,7 +2,7 @@
 CC = g++
 
 # Compiler flags
-CFLAGS = -Wall -g -O0 -std=c++20 #-static -static-libgcc -static-libstdc++ -fPIC #-Wl,-subsystem,windows
+CFLAGS = -Wall -g -O0 -std=c++20 -v -ftime-report #-static -static-libgcc -static-libstdc++ -fPIC #-Wl,-subsystem,windows
 
 # Directories
 SRC_DIR = src
@@ -23,7 +23,7 @@ OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(filter %.cpp, $(SRCS))) \
        $(patsubst $(VENDOR_DIR)/%.c, $(OBJ_DIR)/%.o, $(filter %.c, $(SRCS)))
 
 # Libraries to link
-LIBS = -L$(LIB_DIR) -lglfw3 -l:libsoil2-debug.lib -lgdi32 -lwinmm -lopengl32 
+LIBS = -L$(LIB_DIR) -lglfw3 -l:libsoil2-debug.lib -lspdlog -lgdi32 -lwinmm -lopengl32 
 
 # Executable name
 TARGET = $(BUILD_DIR)/main

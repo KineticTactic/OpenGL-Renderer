@@ -48,9 +48,6 @@ Terrain::Terrain()
       depthShader("shaders/terrain.vert", "shaders/TerrainDepth.tesc", "shaders/TerrainDepth.tese",
                   "shaders/TerrainDepth.frag") {
     std::vector<IntCoords> coords = Spiral(1, 1);
-    for (auto &coord : coords) {
-        // this->chunks.push_back(new Chunk(coord.x, coord.y));
-    }
 
     // TODO: Put into static method
     Chunk::generateBuffers();
@@ -107,7 +104,7 @@ void Terrain::update(Camera &camera) {
             // as we will generate new chunks in its place for the new leaf nodes
             if (this->nodes[i].isLeafNode && !node.isLeafNode) {
                 // Remove the chunk associated with this node
-                for (int j = 0; j < this->chunks.size(); j++) {
+                for (unsigned int j = 0; j < this->chunks.size(); j++) {
                     if (this->chunks[j]->worldPos.x == node.worldPos.x &&
                         this->chunks[j]->worldPos.z == node.worldPos.y) {
                         delete this->chunks[j];
@@ -145,9 +142,6 @@ void Terrain::update(Camera &camera) {
         if (generated >= numPerFrame)
             break;
     }
-
-    std::cout << "Nodes: " << this->nodes.size() << ", Chunks: " << this->chunks.size()
-              << std::endl;
 }
 
 void Terrain::render(Camera &camera, Light &light, unsigned int depthMap,

@@ -4,7 +4,6 @@
 #include "Shader.hpp"
 
 void Debug::init() {
-    /// TODO: Refactor shader class
     Debug::screenShader = new Shader("shaders/Screen.vert", "shaders/Screen.frag");
 
     float quadVertices[] = {

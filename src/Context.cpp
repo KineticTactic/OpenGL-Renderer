@@ -3,24 +3,27 @@
 #include <iostream>
 
 #include "Camera.hpp"
+#include "Log.hpp"
 
 GLFWwindow *Context::createWindow() {
     GLFWwindow *window;
 
     if (!glfwInit()) {
-        std::cout << "Failed to initialize GLFW\n";
+        LOG_CRITICAL("[CONTEXT]: Failed to initialize GLFW");
         return nullptr;
     }
+    LOG_INFO("[CONTEXT]: Initialized GLFW");
 
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
     window = glfwCreateWindow(1366, 768, "Hello World", NULL, NULL);
     if (!window) {
-        std::cout << "Failed to create GLFW window\n";
+        LOG_ERROR("[CONTEXT]: Failed to create GLFW window\n");
         glfwTerminate();
         return nullptr;
     }
+    LOG_INFO("[CONTEXT]: Created GLFW window");
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     // glfwSwapInterval(0);
@@ -114,11 +117,12 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
 void Context::initOpenGL() {
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0) {
-        std::cout << "Failed to initialize OpenGL context\n";
+        LOG_CRITICAL("Failed to initialize OpenGL context");
         return;
     }
-    std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
-              << GLAD_VERSION_MINOR(version) << "\n";
+    // std::cout << "Loaded OpenGL " << GLAD_VERSION_MAJOR(version) << "."
+    //           << GLAD_VERSION_MINOR(version) << "\n";
+    LOG_INFO("Loaded OpenGL {}.{}", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
     int flags;
     glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -153,7 +157,7 @@ void Context::framebufferSizeCallback(GLFWwindow *window, int width, int height)
     if (width == 0 || height == 0)
         return;
     glViewport(0, 0, width, height);
-    std::cout << "Resized to " << width << "x" << height << std::endl;
+
     Camera *camera = (Camera *)glfwGetWindowUserPointer(window);
     camera->setAspectRatio((float)width / (float)height);
 }

@@ -29,7 +29,7 @@ class Terrain {
     GrassRenderer grass;
 
     inline static float MIN_CHUNK_SIZE = 255.0f;
-    inline static float TERRAIN_SIZE = 100000.0f;
+    inline static float TERRAIN_SIZE = 50000.0f;
 
   public:
     Terrain();
