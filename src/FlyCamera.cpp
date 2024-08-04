@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "FlyCamera.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>

@@ -1,23 +1,22 @@
+#include "pch.hpp"
 #include "Shader.hpp"
 
 #include <glad/gl.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <filesystem>
 #include <regex>
 
 #include "Log.hpp"
 
-Shader::Shader(const char *vertexPath, const char *fragmentPath) {
+Shader::Shader(const char *name, const char *vertexPath, const char *fragmentPath) : name(name) {
     this->srcFiles[GL_VERTEX_SHADER] = std::string(vertexPath);
     this->srcFiles[GL_FRAGMENT_SHADER] = std::string(fragmentPath);
     this->buildShaderProgram();
     Shader::shaders.push_back(this);
 }
 
-Shader::Shader(const char *vertexPath, const char *tessControlPath, const char *tessEvalPath,
-               const char *fragmentPath) {
+Shader::Shader(const char *name, const char *vertexPath, const char *tessControlPath,
+               const char *tessEvalPath, const char *fragmentPath)
+    : name(name) {
     this->srcFiles[GL_VERTEX_SHADER] = std::string(vertexPath);
     this->srcFiles[GL_TESS_CONTROL_SHADER] = std::string(tessControlPath);
     this->srcFiles[GL_TESS_EVALUATION_SHADER] = std::string(tessEvalPath);
@@ -26,7 +25,7 @@ Shader::Shader(const char *vertexPath, const char *tessControlPath, const char *
     Shader::shaders.push_back(this);
 }
 
-Shader::Shader(const char *computePath) {
+Shader::Shader(const char *name, const char *computePath) : name(name) {
     this->srcFiles[GL_COMPUTE_SHADER] = std::string(computePath);
     this->buildShaderProgram();
     Shader::shaders.push_back(this);
@@ -68,8 +67,9 @@ void Shader::reloadIfModified() {
         std::string path = it->second;
 
         std::filesystem::file_time_type lastModified = std::filesystem::last_write_time(path);
-        const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(lastModified);
-        const auto time = std::chrono::system_clock::to_time_t(systemTime);
+        // const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(lastModified);
+        // const auto time = std::chrono::system_clock::to_time_t(systemTime);
+        float time = 200.0;
 
         if (time > this->lastModified) {
             this->lastModified = time;
@@ -113,8 +113,10 @@ void Shader::buildShaderProgram() {
         shaders.push_back(shader);
 
         std::filesystem::file_time_type lastModified = std::filesystem::last_write_time(path);
-        const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(lastModified);
-        const auto time = std::chrono::system_clock::to_time_t(systemTime);
+        // const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(lastModified);
+
+        // const auto time = std::chrono::system_clock::to_time_t(systemTime);
+        float time = 100.0;
 
         if (time > this->lastModified)
             this->lastModified = time;
@@ -155,7 +157,7 @@ unsigned int Shader::compileShader(const char *path, unsigned int type) {
         LOG_ERROR("[SHADER]: Failed to compile shader {}\n{}", path, infoLog);
         assert(false);
     } else {
-        LOG_TRACE("[SHADER]: Shader compiled successfully ({})", path);
+        // LOG_TRACE("[SHADER]: Shader compiled successfully ({})", path);
     }
 
     return shader;
@@ -178,7 +180,8 @@ unsigned int Shader::linkProgram(std::vector<unsigned int> shaders) {
         LOG_ERROR("[SHADER]: Failed to link shader program!\n{}", infoLog);
         assert(false);
     } else {
-        LOG_TRACE("[SHADER]: Shader program linked successfully");
+        // LOG_TRACE("[SHADER]: Shader program linked successfully");
+        LOG_TRACE("[SHADER]: {} shader initialized", this->name);
     }
 
     return program;

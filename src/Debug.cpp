@@ -1,10 +1,11 @@
+#include "pch.hpp"
 #include "Debug.hpp"
 
 #include <glad/gl.h>
 #include "Shader.hpp"
 
 void Debug::init() {
-    Debug::screenShader = new Shader("shaders/Screen.vert", "shaders/Screen.frag");
+    Debug::screenShader = new Shader("Screen", "shaders/Screen.vert", "shaders/Screen.frag");
 
     float quadVertices[] = {
         // positions        // texture Coords

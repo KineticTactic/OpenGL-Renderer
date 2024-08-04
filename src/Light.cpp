@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "Light.hpp"
 
 #include "Shader.hpp"

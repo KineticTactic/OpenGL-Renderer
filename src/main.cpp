@@ -1,6 +1,6 @@
+#include "pch.hpp"
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <SOIL2/SOIL2.h>
@@ -31,7 +31,7 @@ int main() {
     Context::setCamera(window, camera);
     Input::init(window, &camera);
 
-    Shader phongShader("shaders/Phong.vert", "shaders/Phong.frag");
+    Shader phongShader("Phong", "shaders/Phong.vert", "shaders/Phong.frag");
 
     Skybox::initShader();
     Skybox skybox("./assets/skybox/compressed/");

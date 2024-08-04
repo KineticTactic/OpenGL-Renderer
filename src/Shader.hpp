@@ -9,10 +9,10 @@
 
 class Shader {
   public:
-    Shader(const char *vertexPath, const char *fragmentPath);
-    Shader(const char *vertexPath, const char *tessControlPath, const char *tessEvalPath,
-           const char *fragmentPath);
-    Shader(const char *computePath);
+    Shader(const char *name, const char *vertexPath, const char *fragmentPath);
+    Shader(const char *name, const char *vertexPath, const char *tessControlPath,
+           const char *tessEvalPath, const char *fragmentPath);
+    Shader(const char *name, const char *computePath);
     ~Shader();
 
     void use();
@@ -30,6 +30,7 @@ class Shader {
 
   private:
     unsigned int programID;
+    std::string name;
     std::map<unsigned int, std::string> srcFiles;
     std::map<std::string, int> uniformLocations;
     std::time_t lastModified = 0;

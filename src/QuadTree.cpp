@@ -1,6 +1,6 @@
+#include "pch.hpp"
 #include "QuadTree.hpp"
 
-#include <iostream>
 #include "Renderable.hpp"
 #include "Shader.hpp"
 

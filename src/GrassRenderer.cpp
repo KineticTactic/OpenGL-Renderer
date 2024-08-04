@@ -1,6 +1,6 @@
+#include "pch.hpp"
 #include "GrassRenderer.hpp"
 
-#include <iostream>
 #include <SOIL2/SOIL2.h>
 #include "Camera.hpp"
 
@@ -21,7 +21,7 @@ std::vector<float> grassVertices = {
     -1.0f, 1.0f, -1.0f, 0.0f, 1.0f   //
 }; //
 
-GrassRenderer::GrassRenderer() : shader("./shaders/Grass.vert", "./shaders/Grass.frag") {
+GrassRenderer::GrassRenderer() : shader("Grass", "./shaders/Grass.vert", "./shaders/Grass.frag") {
     this->grassTexID =
         SOIL_load_OGL_texture("./assets/textures/grass2.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
                               SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |

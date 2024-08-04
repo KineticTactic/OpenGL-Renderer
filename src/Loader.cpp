@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "Loader.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION

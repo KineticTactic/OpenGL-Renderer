@@ -1,9 +1,9 @@
+#include "pch.hpp"
 #include "Chunk.hpp"
 
 #include <GLFW/glfw3.h>
 #include <FastNoise/FastNoiseLite.h>
 #include <glad/gl.h>
-#include <iostream>
 #include <random>
 
 #include "Vertex.hpp"
@@ -112,7 +112,7 @@ void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute,
     glDispatchCompute(heightMapRes, heightMapRes, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    std::cout << "[CHUNK]: Chunk generated in " << time / 1000000 << "ms" << std::endl;
+    // std::cout << "[CHUNK]: Chunk generated in " << time / 1000000 << "ms" << std::endl;
 
     glBeginQuery(GL_TIME_ELAPSED, query);
 
@@ -123,8 +123,9 @@ void Chunk::generate(Shader &terrainGenCompute, Shader &terrainNormalCompute,
     glEndQuery(GL_TIME_ELAPSED);
     glGetQueryObjectui64v(query, GL_QUERY_RESULT, &time);
 
-    std::cout << "[CHUNK]: Data fetched in " << time / 1000000 << "ms" << std::endl;
+    // std::cout << "[CHUNK]: Data fetched in " << time / 1000000 << "ms" << std::endl;
 
+    ///
     // std::default_random_engine generator;
     // std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
 

@@ -1,9 +1,8 @@
+#include "pch.hpp"
 #include "Terrain.hpp"
 
 #include <glad/gl.h>
 #include <FastNoise/FastNoiseLite.h>
-#include <iostream>
-#include <algorithm>
 #include <SOIL2/SOIL2.h>
 
 #include "Vertex.hpp"
@@ -41,12 +40,12 @@ std::vector<IntCoords> Spiral(int X, int Y) {
 }
 
 Terrain::Terrain()
-    : shader("shaders/terrain.vert", "shaders/terrain.tesc", "shaders/terrain.tese",
+    : shader("Terrain", "shaders/terrain.vert", "shaders/terrain.tesc", "shaders/terrain.tese",
              "shaders/terrain.frag"),
-      terrainGenCompute("shaders/TerrainGen.comp"),
-      terrainNormalCompute("shaders/TerrainNormal.comp"),
-      depthShader("shaders/terrain.vert", "shaders/TerrainDepth.tesc", "shaders/TerrainDepth.tese",
-                  "shaders/TerrainDepth.frag") {
+      terrainGenCompute("Terrain Generation", "shaders/TerrainGen.comp"),
+      terrainNormalCompute("Terrain Normal Calculation", "shaders/TerrainNormal.comp"),
+      depthShader("Terrain Depth", "shaders/terrain.vert", "shaders/TerrainDepth.tesc",
+                  "shaders/TerrainDepth.tese", "shaders/TerrainDepth.frag") {
     std::vector<IntCoords> coords = Spiral(1, 1);
 
     // TODO: Put into static method

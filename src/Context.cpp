@@ -1,9 +1,7 @@
+#include "pch.hpp"
 #include "Context.hpp"
 
-#include <iostream>
-
 #include "Camera.hpp"
-#include "Log.hpp"
 
 GLFWwindow *Context::createWindow() {
     GLFWwindow *window;

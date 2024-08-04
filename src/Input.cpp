@@ -1,6 +1,6 @@
+#include "pch.hpp"
 #include "Input.hpp"
 
-#include <iostream>
 #include "FlyCamera.hpp"
 #include "Shader.hpp"
 

@@ -1,0 +1,172 @@
+#version 460 core
+#extension GL_ARB_shading_language_include : require
+
+precision highp float;
+
+#include "noise/simplex.glsl"
+#line 8 0
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image2D heightMap;
+
+uniform vec3 worldPos;
+uniform float chunkSize;
+uniform int heightMapRes;
+
+// float ridgenoise(vec3 v) {
+// 	return 2 * (0.5 - abs(0.5 - noised(v).x));
+// }
+
+// float octaveRidgeNoise(vec2 v, int octaves, float freq, float gain) {
+// 	float value = 0.0;
+// 	float amplitude = 1.0;
+// 	float frequency = freq;
+// 	float maxVal = 0.0;
+// 	vec2 grad = vec2(0.0, 0.0);
+// 	for(int i = 0; i < octaves; i++) {
+// 		float noise = ridgenoise(v * frequency);
+
+// 		value += noise * amplitude;
+
+// 		maxVal += amplitude;
+// 		amplitude *= gain;
+// 		frequency *= 2.0;
+// 	}
+
+// 	return value / maxVal;
+// }
+
+float octaveNoise(vec2 v, int octaves, float freq, float gain) {
+	float value = 0.0;
+	float amplitude = 1.0;
+	float frequency = freq;
+	float maxVal = 0.0;
+
+	vec2 grad = vec2(0.0, 0.0);
+
+	for(int i = 0; i < octaves; i++) {
+		// vec3 noise = cubicNoise(vec3(v, 0.0) * frequency);
+		float noise = noised(vec3(v * frequency, 0)).x;
+		// float noise = snoise(v * frequency);
+
+		// grad += noise.yz * amplitude;
+		// float m = length(grad);
+		// float k = 0.3;
+		value += noise.x * amplitude;
+
+		maxVal += amplitude;
+		amplitude *= gain;
+		frequency *= 2.0;
+	}
+	return value / maxVal;
+}
+
+float mountainNoise(vec2 v, int octaves) {
+	float value = 0.0;
+	float amplitude = 1.0;
+	float frequency = 0.0001;
+	float maxVal = 0.0;
+	float lacunarity = 2.8;
+	float gain = 0.4;
+	gain += noised(vec3(v, 0) * 0.01).x / 50 - 0.01;
+
+	vec2 grad = vec2(0.0, 0.0);
+
+	for(int i = 0; i < octaves; i++) {
+		vec4 noise = noised(vec3(v, 0.0) * frequency);
+		grad += noise.yz * amplitude;
+
+		float k = 2.0;
+		value += noise.x * amplitude / (1.0 + k * dot(grad, grad));
+
+		maxVal += amplitude;
+		amplitude *= gain;
+		frequency *= lacunarity;
+	}
+	return value / maxVal;
+}
+
+float heightFunc(vec2 v) {
+	float altitude = octaveNoise(v, 6, 0.0001, 0.2).x;
+	float oceanCutoff = 0.4;
+	if(altitude < oceanCutoff)
+		altitude = 0;
+	else {
+		altitude = (altitude - oceanCutoff) / (1.0 - oceanCutoff);
+		// if(altitude > 0.5)
+		// 	altitude = 1;
+		// else
+		// 	altitude = 0.5;
+	}
+	// return altitude;
+
+	// altitude = octaveNoise(v, 6, 0.0002, 0.3).x;
+	// altitude = pow(altitude, 1) * 4;
+
+	// float plainHeight = altitude + octaveNoise(v, 6, 0.0002, 0.5) + octaveNoise(v, 6, 0.0005, 0.5) * 1;
+	// float hillHeight = altitude + octaveNoise(v, 10, 0.001, 0.3) * 1.5;
+	// float mountainHeight = altitude + octaveNoise(v, 5, 0.002, 0.3) * 2 + octaveNoise(v, 10, 0.01, 0.5) * 0.1 + octaveRidgeNoise(v, 4, 0.005, 0.5) * 0.1;
+
+	// float y = 0;
+	// if(altitude < 0.1) {
+	// 	float t = smoothstep(0.0, 0.5, altitude);
+	// 	y = mix(0.0, plainHeight, t);
+	// } else if(altitude < 0.5) {
+    //     // Interpolate between plains and hills
+	// 	float t = smoothstep(1.0, 2.0, altitude);
+	// 	y = mix(plainHeight, hillHeight, t);
+	// } else if(altitude < 0.8) {
+    //     // Interpolate between hills and mountains
+	// 	float t = smoothstep(2.0, 3.0, altitude);
+	// 	y = mix(hillHeight, mountainHeight, t);
+	// } else {
+	// 	y = mountainHeight;
+	// }
+
+	float plainHeight = octaveNoise(v, 6, 0.001, 0.5) * 0.2;
+	plainHeight = pow(plainHeight, 2);
+	float hillHeight = octaveNoise(v, 6, 0.0005, 0.5) * 0.5;
+	float mountainHeight = octaveNoise(v, 20, 0.0002, 0.5);
+	float y = 1.0;
+	if(altitude == 0)
+		y = 0;
+	// else if(altitude < 0.1)
+	// 	y = mix(0, plainHeight, altitude / 0.1);
+	// else if(altitude < 0.3)
+	// 	y = mix(plainHeight, hillHeight, (altitude - 0.1) / 0.2);
+	// else if(altitude < 0.5)
+	// 	y = mix(hillHeight, mountainHeight, (altitude - 0.3) / 0.2);
+	else
+		y = mountainNoise(v, 20);
+		// y = mountainHeight;
+
+	// return noised(vec3(v.x, v.y, 0) * 0.01).x;
+	return y * 5000;
+	// return altitude;
+}
+
+void main() {
+	ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+	vec2 pixelWorldPos = vec2(pixel) / (heightMapRes - 1) * chunkSize + worldPos.xz - chunkSize / 2.0;
+
+	float height = heightFunc(pixelWorldPos);
+	// float height = sin(pixelWorldPos.x / 10 + pixelWorldPos.y / 10) + cos(pixelWorldPos.x / 10 - pixelWorldPos.y / 10);
+	// height *= 10;
+
+	vec3 normal = vec3(0.0, 1.0, 0.0);
+
+	if(pixel.x == 0 || pixel.y == 0 || pixel.x == heightMapRes - 1 || pixel.y == heightMapRes - 1) {
+		float eps = chunkSize / float(heightMapRes);
+
+		float fx0 = heightFunc(pixelWorldPos + vec2(-eps, 0));
+		float fx1 = heightFunc(pixelWorldPos + vec2(eps, 0));
+		float fy0 = heightFunc(pixelWorldPos + vec2(0, -eps));
+		float fy1 = heightFunc(pixelWorldPos + vec2(0, eps));
+
+		normal = vec3((fx0 - fx1) / (2 * eps), 1, (fy0 - fy1) / (2 * eps));
+		normal *= (1.0 / normal.y);
+	}
+
+	imageStore(heightMap, pixel, vec4(height, normal.x, normal.z, 0.0));
+}

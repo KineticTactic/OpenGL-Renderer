@@ -6,7 +6,7 @@
                 "cwd": "${workspaceFolder}"
             },
             "command": "make",
-            "args": [],
+            "args": ["-j8"],
             "group": {
                 "kind": "build",
                 "isDefault": true

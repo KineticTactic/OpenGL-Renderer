@@ -1,6 +1,6 @@
+#include "pch.hpp"
 #include "Skybox.hpp"
 
-#include <iostream>
 #include <SOIL2/SOIL2.h>
 #include <GLAD/gl.h>
 
@@ -49,7 +49,7 @@ void Skybox::render(Camera &camera) {
 }
 
 void Skybox::initShader() {
-    Skybox::shader = new Shader("shaders/Skybox.vert", "shaders/Skybox.frag");
+    Skybox::shader = new Shader("Skybox", "shaders/Skybox.vert", "shaders/Skybox.frag");
 }
 
 std::vector<float> Skybox::vertexData = {
